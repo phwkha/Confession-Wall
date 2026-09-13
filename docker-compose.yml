@@ -22,6 +22,7 @@ services:
       - confession-network
 
   backend:
+    image: ${DOCKER_USERNAME:-phwkha}/confession-backend:${IMAGE_TAG:-latest}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -43,6 +44,7 @@ services:
       - confession-network
 
   frontend:
+    image: ${DOCKER_USERNAME:-phwkha}/confession-frontend:${IMAGE_TAG:-latest}
     build:
       context: ./frontend
       dockerfile: Dockerfile
