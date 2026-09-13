@@ -10,11 +10,8 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Stage 2: Production runtime with lightweight Nginx
-FROM nginx:alpine
-
-# Remove default nginx static assets
-RUN rm -rf /usr/share/nginx/html/*
+# Stage 2: Production runtime with unprivileged Nginx (runs as non-root user)
+FROM nginxinc/nginx-unprivileged:alpine
 
 # Copy built assets from builder stage
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -22,8 +19,11 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy custom Nginx configuration with SPA routing and API reverse proxy
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose HTTP port 80
-EXPOSE 80
+# Explicitly switch to non-root user for security (SonarQube docker:S6471)
+USER nginx
+
+# Expose unprivileged HTTP port 8080
+EXPOSE 8080
 
 # Run Nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]
