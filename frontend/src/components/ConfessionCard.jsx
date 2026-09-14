@@ -51,7 +51,13 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
   const [isLiking, setIsLiking] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
   const [animateHeart, setAnimateHeart] = useState(false);
-  const [tiltStyle, setTiltStyle] = useState({});
+  const [tiltStyle, setTiltStyle] = useState({
+    transform: 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale3d(1, 1, 1)',
+    boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(168, 85, 247, 0.15)',
+  });
+  const [glareStyle, setGlareStyle] = useState({
+    opacity: 0,
+  });
   const cardRef = useRef(null);
 
   useEffect(() => {
@@ -67,19 +73,41 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -9;
-    const rotateY = ((x - centerX) / centerX) * 9;
+
+    // Stronger, noticeable 3D tilt: up to 16 degrees
+    const rotateX = ((y - centerY) / centerY) * -16;
+    const rotateY = ((x - centerX) / centerX) * 16;
+
+    // Dynamic light glare following the cursor
+    const glareX = (x / rect.width) * 100;
+    const glareY = (y / rect.height) * 100;
+
+    // Dynamic 3D depth shadow that responds in real-time to the tilt
+    const shadowX = (rotateY * -1.5).toFixed(1);
+    const shadowY = (Math.abs(rotateX) + 14).toFixed(1);
 
     setTiltStyle({
-      transform: `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateZ(6px)`,
-      transition: 'transform 0.1s ease-out',
+      transform: `perspective(1200px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateZ(24px) scale3d(1.03, 1.03, 1.03)`,
+      boxShadow: `${shadowX}px ${shadowY}px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(168, 85, 247, 0.35)`,
+      transition: 'transform 0.08s ease-out, box-shadow 0.08s ease-out',
+    });
+
+    setGlareStyle({
+      background: `radial-gradient(circle at ${glareX.toFixed(1)}% ${glareY.toFixed(1)}%, rgba(192, 132, 252, 0.25) 0%, rgba(168, 85, 247, 0.08) 40%, transparent 70%)`,
+      opacity: 1,
+      transition: 'opacity 0.15s ease-out',
     });
   };
 
   const handleMouseLeave = () => {
     setTiltStyle({
-      transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)',
-      transition: 'transform 0.35s ease-out',
+      transform: 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale3d(1, 1, 1)',
+      boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(168, 85, 247, 0.15)',
+      transition: 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s ease-out',
+    });
+    setGlareStyle({
+      opacity: 0,
+      transition: 'opacity 0.4s ease-out',
     });
   };
 
@@ -121,90 +149,115 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
   const isAnonymous = authorName === 'Ẩn danh';
 
   return (
-    <article
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={tiltStyle}
-      className="group bg-slate-900/75 backdrop-blur-md rounded-2xl p-5 border border-slate-800/80 hover:border-purple-800/60 shadow-card hover:shadow-[0_0_25px_rgba(168,85,247,0.18)] transition-all duration-300 flex flex-col justify-between relative overflow-hidden will-change-transform animate-confession-appear"
-    >
-      {/* Decorative top amethyst gradient accent bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-950 via-purple-500 to-fuchsia-950 opacity-70 group-hover:opacity-100 group-hover:shadow-[0_0_14px_rgba(168,85,247,0.7)] transition-all" />
+    <div className="[perspective:1200px] h-full">
+      <article
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={tiltStyle}
+        className="group bg-slate-900/85 backdrop-blur-md rounded-2xl p-5 border border-slate-800/90 hover:border-purple-500/70 transition-colors duration-200 flex flex-col justify-between relative will-change-transform [transform-style:preserve-3d] cursor-pointer animate-confession-appear h-full select-none"
+      >
+        {/* Background rounded container for border glow and dynamic specular glare */}
+        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+          {/* Decorative top amethyst gradient accent bar */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-950 via-purple-400 to-fuchsia-950 opacity-70 group-hover:opacity-100 group-hover:shadow-[0_0_16px_rgba(168,85,247,0.9)] transition-all" />
 
-      {/* Subtle hover dynamic sheen */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/0 via-purple-500/5 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-      <div className="relative z-10">
-        {/* Author & Timestamp Header */}
-        <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-800/70">
-          <div className="flex items-center gap-2 min-w-0">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold ${
-                isAnonymous
-                  ? 'bg-slate-800/90 text-slate-400 border border-slate-700/60'
-                  : 'bg-purple-950/70 text-purple-300 border border-purple-800/60 shadow-[0_0_8px_rgba(168,85,247,0.25)]'
-              }`}
-            >
-              <User className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="block font-medium text-slate-200 text-sm truncate group-hover:text-purple-200 transition-colors">
-                {authorName}
-              </span>
-              <span className="flex items-center gap-1 text-[11px] text-slate-400">
-                <Clock className="w-3 h-3 text-slate-500" />
-                <time dateTime={confession.createdAt}>
-                  {formatVietnameseTime(confession.createdAt)}
-                </time>
-              </span>
-            </div>
-          </div>
-
-          <span className="text-[11px] font-mono text-slate-500 group-hover:text-purple-400/70 transition-colors">
-            #{confession.id}
-          </span>
+          {/* Dynamic 3D mouse glare reflection */}
+          <div
+            style={glareStyle}
+            className="absolute inset-0 pointer-events-none"
+          />
         </div>
 
-        {/* Message Content */}
-        <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-line break-words my-2 font-normal selection:bg-purple-950 selection:text-purple-300">
+        {/* 3D Floating Layer 1: Header (Author & Timestamp) */}
+        <div
+          style={{ transform: 'translateZ(28px)', transformStyle: 'preserve-3d' }}
+          className="relative z-10 transition-transform duration-100"
+        >
+          <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-800/80">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                style={{ transform: 'translateZ(10px)' }}
+                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold shadow-md ${
+                  isAnonymous
+                    ? 'bg-slate-800 text-slate-400 border border-slate-700/80'
+                    : 'bg-purple-950 text-purple-300 border border-purple-700/80 shadow-[0_0_12px_rgba(168,85,247,0.35)]'
+                }`}
+              >
+                <User className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="block font-semibold text-slate-200 text-sm truncate group-hover:text-purple-200 transition-colors">
+                  {authorName}
+                </span>
+                <span className="flex items-center gap-1 text-[11px] text-slate-400">
+                  <Clock className="w-3 h-3 text-slate-500" />
+                  <time dateTime={confession.createdAt}>
+                    {formatVietnameseTime(confession.createdAt)}
+                  </time>
+                </span>
+              </div>
+            </div>
+
+            <span
+              style={{ transform: 'translateZ(12px)' }}
+              className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-850 border border-slate-800 text-slate-400 group-hover:text-purple-300 group-hover:border-purple-800/60 transition-colors shadow-sm"
+            >
+              #{confession.id}
+            </span>
+          </div>
+        </div>
+
+        {/* 3D Floating Layer 2: Confession Message Content */}
+        <div
+          style={{ transform: 'translateZ(18px)' }}
+          className="text-slate-300 text-sm leading-relaxed whitespace-pre-line break-words my-3 font-normal selection:bg-purple-950 selection:text-purple-300 flex-1 relative z-10 transition-transform duration-100"
+        >
           {confession.content}
         </div>
-      </div>
 
-      {/* Card Actions Footer */}
-      <div className="pt-3 mt-3 border-t border-slate-800/70 flex items-center justify-between relative z-10">
-        <button
-          type="button"
-          onClick={handleLike}
-          disabled={isLiking}
-          aria-label={`Thả tim cho lời thú tội #${confession.id}, hiện có ${likes} tim`}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
-            hasLiked
-              ? 'bg-purple-950/70 text-purple-200 border border-purple-700/70 shadow-[0_0_12px_rgba(168,85,247,0.35)]'
-              : 'bg-slate-800/80 text-slate-300 hover:bg-purple-950/50 hover:text-purple-200 border border-slate-700/60 hover:border-purple-800/60'
-          }`}
+        {/* 3D Floating Layer 3: Card Actions & Like Button (Highest elevation) */}
+        <div
+          style={{ transform: 'translateZ(36px)', transformStyle: 'preserve-3d' }}
+          className="pt-3 mt-3 border-t border-slate-800/80 flex items-center justify-between relative z-20 transition-transform duration-100"
         >
-          <Heart
-            className={`w-3.5 h-3.5 transition-transform ${
+          <button
+            type="button"
+            onClick={handleLike}
+            disabled={isLiking}
+            aria-label={`Thả tim cho lời thú tội #${confession.id}, hiện có ${likes} tim`}
+            style={{ transform: 'translateZ(8px)' }}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 shadow-md ${
               hasLiked
-                ? 'fill-purple-400 text-purple-400 drop-shadow-[0_0_6px_rgba(192,132,252,0.9)]'
-                : 'text-slate-400 group-hover:text-purple-400'
-            } ${animateHeart ? 'scale-125 text-purple-400 fill-purple-400 animate-pulse' : ''}`}
-          />
-          <span>💜 Thả tim</span>
-          <span
-            className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
-              hasLiked ? 'bg-purple-900/80 text-purple-200' : 'bg-slate-700/60 text-slate-300'
+                ? 'bg-purple-900/90 text-purple-100 border border-purple-500/80 shadow-[0_0_16px_rgba(168,85,247,0.5)]'
+                : 'bg-slate-800/90 text-slate-300 hover:bg-purple-950/70 hover:text-purple-100 border border-slate-700/80 hover:border-purple-600/70 hover:shadow-[0_0_12px_rgba(168,85,247,0.25)]'
             }`}
           >
-            {likes}
-          </span>
-        </button>
+            <Heart
+              className={`w-3.5 h-3.5 transition-transform ${
+                hasLiked
+                  ? 'fill-purple-400 text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.95)]'
+                  : 'text-slate-400 group-hover:text-purple-400'
+              } ${animateHeart ? 'scale-125 text-purple-400 fill-purple-400 animate-pulse' : ''}`}
+            />
+            <span>💜 Thả tim</span>
+            <span
+              className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
+                hasLiked ? 'bg-purple-950 text-purple-200' : 'bg-slate-700 text-slate-200'
+              }`}
+            >
+              {likes}
+            </span>
+          </button>
 
-        <span className="text-[11px] text-slate-500 italic">
-          Lời thú tội
-        </span>
-      </div>
-    </article>
+          <span
+            style={{ transform: 'translateZ(5px)' }}
+            className="text-[11px] text-slate-500 italic"
+          >
+            Lời thú tội
+          </span>
+        </div>
+      </article>
+    </div>
   );
 }

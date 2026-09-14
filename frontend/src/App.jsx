@@ -3,6 +3,7 @@ import Header from './components/Header';
 import ConfessionForm from './components/ConfessionForm';
 import ConfessionList from './components/ConfessionList';
 import Ambient3DBackground from './components/3d/Ambient3DBackground';
+import CustomCursor from './components/3d/CustomCursor';
 import { getConfessions } from './services/api';
 import { useRealtimeFeed } from './hooks/useRealtimeFeed';
 import { AlertTriangle } from 'lucide-react';
@@ -70,6 +71,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans relative overflow-x-hidden selection:bg-rose-950 selection:text-rose-300">
+      <CustomCursor />
       <Ambient3DBackground />
       <Header totalCount={confessions.length} connectionStatus={connectionStatus} />
 

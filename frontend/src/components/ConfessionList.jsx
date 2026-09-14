@@ -61,7 +61,7 @@ export default function ConfessionList({ confessions = [], isLoading = false, on
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 [perspective:1400px]">
       {confessions.map((item) => (
         <ConfessionCard
           key={item.id}

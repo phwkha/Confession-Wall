@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Amethyst Gothic Cursors */
+:root {
+  --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M3 2L18 11L11 12L8 19L3 2Z' fill='%239333ea' stroke='%23e879f9' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M3 2L11 12' stroke='%23ffffff' stroke-width='1.2'/%3E%3Ccircle cx='3.5' cy='2.5' r='1.2' fill='%23ffffff'/%3E%3C/svg%3E") 3 2, auto;
+
+  --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28' fill='none'%3E%3Cpath d='M14 24C14 24 4 17.5 4 10C4 6 7 4 10 4C12 4 13.5 5 14 6C14.5 5 16 4 18 4C21 4 24 6 24 10C24 17.5 14 24 14 24Z' fill='%23c084fc' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='10' cy='8' r='1.5' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E") 14 14, pointer;
+}
+
 @layer base {
   body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -9,6 +16,11 @@
     color: #e2e8f0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    cursor: var(--cursor-default);
+  }
+
+  a, button, input, textarea, select, [role="button"], .cursor-pointer, article {
+    cursor: var(--cursor-pointer) !important;
   }
 }
 
@@ -29,23 +41,19 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #e11d48;
+  background: #a855f7;
 }
 
-
-
-/* Confession appear animation for real-time feed update */
+/* Confession appear animation for real-time feed update (opacity only, no transform lock) */
 @keyframes confessionAppear {
   0% {
     opacity: 0;
-    transform: translateY(-16px) scale(0.98);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
 .animate-confession-appear {
-  animation: confessionAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: confessionAppear 0.4s ease-out;
 }
