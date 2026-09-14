@@ -30,6 +30,9 @@ class ConfessionServiceTest {
     @Mock
     private ConfessionRepository confessionRepository;
 
+    @Mock
+    private RealtimeService realtimeService;
+
     @InjectMocks
     private ConfessionServiceImpl confessionService;
 
@@ -81,6 +84,8 @@ class ConfessionServiceTest {
         Confession captured = captor.getValue();
         assertThat(captured.getAuthor()).isEqualTo("Minh");
         assertThat(captured.getContent()).isEqualTo("Hôm nay trời đẹp quá");
+
+        verify(realtimeService, times(1)).broadcastNewConfession(created);
     }
 
     @Test
@@ -127,6 +132,7 @@ class ConfessionServiceTest {
                 .hasMessageContaining("Tên tác giả không được vượt quá 50 ký tự");
 
         verify(confessionRepository, never()).save(any());
+        verify(realtimeService, never()).broadcastNewConfession(any());
     }
 
     @Test
@@ -141,6 +147,7 @@ class ConfessionServiceTest {
         assertThat(updated.getLikes()).isEqualTo(4); // was 3, incremented to 4
         verify(confessionRepository, times(1)).findById(1L);
         verify(confessionRepository, times(1)).save(sampleConfession1);
+        verify(realtimeService, times(1)).broadcastLikeUpdate(1L, 4);
     }
 
     @Test
@@ -154,6 +161,7 @@ class ConfessionServiceTest {
 
         verify(confessionRepository, times(1)).findById(999L);
         verify(confessionRepository, never()).save(any());
+        verify(realtimeService, never()).broadcastLikeUpdate(any(), any());
     }
 
     @Test
@@ -164,5 +172,6 @@ class ConfessionServiceTest {
                 .hasMessageContaining("ID lời thú tội không được để trống");
 
         verify(confessionRepository, never()).findById(any());
+        verify(realtimeService, never()).broadcastLikeUpdate(any(), any());
     }
 }

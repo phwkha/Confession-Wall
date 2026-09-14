@@ -5,8 +5,11 @@ import com.example.confessionwall.exception.ResourceNotFoundException;
 import com.example.confessionwall.model.Confession;
 import com.example.confessionwall.repository.ConfessionRepository;
 import com.example.confessionwall.service.ConfessionService;
+import com.example.confessionwall.service.RealtimeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,9 +19,12 @@ import java.util.List;
 public class ConfessionServiceImpl implements ConfessionService {
 
     private final ConfessionRepository confessionRepository;
+    private final RealtimeService realtimeService;
 
-    public ConfessionServiceImpl(ConfessionRepository confessionRepository) {
+    public ConfessionServiceImpl(ConfessionRepository confessionRepository,
+                                 RealtimeService realtimeService) {
         this.confessionRepository = confessionRepository;
+        this.realtimeService = realtimeService;
     }
 
     @Override
@@ -57,7 +63,22 @@ public class ConfessionServiceImpl implements ConfessionService {
         confession.setLikes(0);
         confession.setCreatedAt(LocalDateTime.now());
 
-        return confessionRepository.save(confession);
+        Confession saved = confessionRepository.save(confession);
+
+        if (realtimeService != null) {
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        realtimeService.broadcastNewConfession(saved);
+                    }
+                });
+            } else {
+                realtimeService.broadcastNewConfession(saved);
+            }
+        }
+
+        return saved;
     }
 
     @Override
@@ -72,6 +93,21 @@ public class ConfessionServiceImpl implements ConfessionService {
         int currentLikes = (confession.getLikes() == null) ? 0 : confession.getLikes();
         confession.setLikes(currentLikes + 1);
 
-        return confessionRepository.save(confession);
+        Confession saved = confessionRepository.save(confession);
+
+        if (realtimeService != null) {
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        realtimeService.broadcastLikeUpdate(saved.getId(), saved.getLikes());
+                    }
+                });
+            } else {
+                realtimeService.broadcastLikeUpdate(saved.getId(), saved.getLikes());
+            }
+        }
+
+        return saved;
     }
 }

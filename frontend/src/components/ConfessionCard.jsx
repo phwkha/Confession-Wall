@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Heart, Clock, User } from 'lucide-react';
 import { likeConfession } from '../services/api';
 
@@ -53,6 +53,12 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
   const [animateHeart, setAnimateHeart] = useState(false);
   const [tiltStyle, setTiltStyle] = useState({});
   const cardRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof confession.likes === 'number') {
+      setLikes(confession.likes);
+    }
+  }, [confession.likes]);
 
   const handleMouseMove = (e) => {
     if (!cardRef.current) return;
@@ -120,7 +126,7 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={tiltStyle}
-      className="group bg-slate-900/75 backdrop-blur-md rounded-2xl p-5 border border-slate-800/80 hover:border-purple-800/60 shadow-card hover:shadow-[0_0_25px_rgba(168,85,247,0.18)] transition-all duration-300 flex flex-col justify-between relative overflow-hidden will-change-transform"
+      className="group bg-slate-900/75 backdrop-blur-md rounded-2xl p-5 border border-slate-800/80 hover:border-purple-800/60 shadow-card hover:shadow-[0_0_25px_rgba(168,85,247,0.18)] transition-all duration-300 flex flex-col justify-between relative overflow-hidden will-change-transform animate-confession-appear"
     >
       {/* Decorative top amethyst gradient accent bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-950 via-purple-500 to-fuchsia-950 opacity-70 group-hover:opacity-100 group-hover:shadow-[0_0_14px_rgba(168,85,247,0.7)] transition-all" />

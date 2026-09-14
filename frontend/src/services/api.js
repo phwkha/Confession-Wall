@@ -45,4 +45,10 @@ export const likeConfession = async (id) => {
   return response.data;
 };
 
+/**
+ * Get the Server-Sent Events realtime stream endpoint URL
+ * @returns {string} Realtime endpoint URL
+ */
+export const getRealtimeStreamUrl = () => `${baseURL}/realtime`;
+
 export default api;

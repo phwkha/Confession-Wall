@@ -4,20 +4,16 @@ import ConfessionForm from './components/ConfessionForm';
 import ConfessionList from './components/ConfessionList';
 import Ambient3DBackground from './components/3d/Ambient3DBackground';
 import { getConfessions } from './services/api';
-import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { useRealtimeFeed } from './hooks/useRealtimeFeed';
+import { AlertTriangle } from 'lucide-react';
 
 export default function App() {
   const [confessions, setConfessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchConfessionsData = useCallback(async (showRefreshingSpinner = false) => {
-    if (showRefreshingSpinner) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
+  const fetchConfessionsData = useCallback(async () => {
+    setIsLoading(true);
     setErrorMessage(null);
 
     try {
@@ -36,7 +32,6 @@ export default function App() {
       );
     } finally {
       setIsLoading(false);
-      setIsRefreshing(false);
     }
   }, []);
 
@@ -44,31 +39,47 @@ export default function App() {
     fetchConfessionsData();
   }, [fetchConfessionsData]);
 
-  const handleConfessionCreated = (newConfession) => {
-    if (!newConfession) return;
-    setConfessions((prev) => [newConfession, ...prev]);
-  };
+  // Unified new confession handler with deduplication (for form submit & SSE live stream)
+  const handleNewConfession = useCallback((newConfession) => {
+    if (!newConfession || !newConfession.id) return;
+    setConfessions((prev) => {
+      if (prev.some((c) => c.id === newConfession.id)) return prev;
+      return [newConfession, ...prev];
+    });
+  }, []);
 
-  const handleLikeUpdate = (confessionId, newLikeCount) => {
+  // Card like update handler
+  const handleLikeUpdate = useCallback((confessionId, newLikeCount) => {
     setConfessions((prev) =>
       prev.map((item) =>
         item.id === confessionId ? { ...item, likes: newLikeCount } : item
       )
     );
-  };
+  }, []);
+
+  // Reconnection reconciliation handler
+  const handleRealtimeReconnect = useCallback(() => {
+    fetchConfessionsData();
+  }, [fetchConfessionsData]);
+
+  const { connectionStatus } = useRealtimeFeed({
+    onNewConfession: handleNewConfession,
+    onLikeUpdate: handleLikeUpdate,
+    onReconnect: handleRealtimeReconnect,
+  });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans relative overflow-x-hidden selection:bg-rose-950 selection:text-rose-300">
       <Ambient3DBackground />
-      <Header totalCount={confessions.length} />
+      <Header totalCount={confessions.length} connectionStatus={connectionStatus} />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 relative z-10">
         <section aria-labelledby="form-heading">
           <h2 id="form-heading" className="sr-only">Biểu mẫu gửi lời thú tội</h2>
-          <ConfessionForm onConfessionCreated={handleConfessionCreated} />
+          <ConfessionForm onConfessionCreated={handleNewConfession} />
         </section>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-800/80">
+        <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-800/80">
           <div>
             <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
               Bức tường chia sẻ
@@ -77,19 +88,9 @@ export default function App() {
               </span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Những tâm tư thật lòng trong màn đêm huyền bí
+              Những tâm tư thật lòng trong màn đêm huyền bí &bull; Cập nhật tự động theo thời gian thực
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => fetchConfessionsData(true)}
-            disabled={isLoading || isRefreshing}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 hover:border-rose-900/60 text-slate-300 hover:text-rose-300 text-xs font-medium shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-400 ${isRefreshing ? 'animate-spin text-rose-500' : ''}`} />
-            <span>Làm mới</span>
-          </button>
         </div>
 
         {errorMessage && (
