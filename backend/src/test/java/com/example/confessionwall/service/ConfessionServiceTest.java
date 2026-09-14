@@ -116,6 +116,16 @@ class ConfessionServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Yêu cầu không được để trống");
 
+        ConfessionRequest requestOversizedContent = new ConfessionRequest("A".repeat(1001), "Nam");
+        assertThatThrownBy(() -> confessionService.createConfession(requestOversizedContent))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Nội dung lời thú tội không được vượt quá 1000 ký tự");
+
+        ConfessionRequest requestOversizedAuthor = new ConfessionRequest("Nội dung hợp lệ", "B".repeat(51));
+        assertThatThrownBy(() -> confessionService.createConfession(requestOversizedAuthor))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Tên tác giả không được vượt quá 50 ký tự");
+
         verify(confessionRepository, never()).save(any());
     }
 

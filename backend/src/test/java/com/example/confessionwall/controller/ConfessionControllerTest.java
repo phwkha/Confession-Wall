@@ -116,6 +116,36 @@ class ConfessionControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/confessions with content exceeding 1000 chars should return 400 Bad Request")
+    void createConfession_oversizedContent_shouldReturn400BadRequest() throws Exception {
+        String longContent = "A".repeat(1001);
+        ConfessionRequest oversizedRequest = new ConfessionRequest(longContent, "Ẩn danh");
+
+        mockMvc.perform(post("/api/confessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(oversizedRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)))
+                .andExpect(jsonPath("$.error", is("Bad Request")))
+                .andExpect(jsonPath("$.message", containsString("Nội dung lời thú tội không được vượt quá 1000 ký tự")));
+    }
+
+    @Test
+    @DisplayName("POST /api/confessions with author exceeding 50 chars should return 400 Bad Request")
+    void createConfession_oversizedAuthor_shouldReturn400BadRequest() throws Exception {
+        String longAuthor = "B".repeat(51);
+        ConfessionRequest oversizedRequest = new ConfessionRequest("Nội dung hợp lệ", longAuthor);
+
+        mockMvc.perform(post("/api/confessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(oversizedRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)))
+                .andExpect(jsonPath("$.error", is("Bad Request")))
+                .andExpect(jsonPath("$.message", containsString("Tên tác giả không được vượt quá 50 ký tự")));
+    }
+
+    @Test
     @DisplayName("PUT /api/confessions/{id}/like should increment likes and return 200 OK")
     void likeConfession_existingId_shouldReturn200OkWithIncrementedLikes() throws Exception {
         Confession likedConfession = new Confession(1L, "Lời thú tội 1", "Ẩn danh", 6, LocalDateTime.now());

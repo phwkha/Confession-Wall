@@ -37,12 +37,18 @@ public class ConfessionServiceImpl implements ConfessionService {
         if (content == null || content.trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung lời thú tội không được để trống");
         }
+        if (content.trim().length() > 1000) {
+            throw new IllegalArgumentException("Nội dung lời thú tội không được vượt quá 1000 ký tự");
+        }
 
         String author = request.getAuthor();
         if (author == null || author.trim().isEmpty()) {
             author = "Ẩn danh";
         } else {
             author = author.trim();
+        }
+        if (author.length() > 50) {
+            throw new IllegalArgumentException("Tên tác giả không được vượt quá 50 ký tự");
         }
 
         Confession confession = new Confession();
