@@ -5,6 +5,12 @@ pipeline {
         githubPush()
     }
 
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5'))
+        timeout(time: 20, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+
     environment {
         // =========================================================================
         // 1. CẤU HÌNH DOCKER HUB & PHIÊN BẢN IMAGE
@@ -144,11 +150,12 @@ EOF
 
     post {
         always {
-            echo 'Dọn dẹp các images dangling/trung gian'
+            echo 'Dọn dẹp các images dangling/trung gian và build cache cũ'
             sh 'docker image prune -f'
+            sh 'docker builder prune -f --filter "until=24h"'
         }
         success {
-            echo "Tất cả bài test đều PASS và bản build #${IMAGE_TAG} đã được deploy "
+            echo "Tất cả bài test đều PASS và bản build #${IMAGE_TAG} đã được deploy"
         }
         failure {
             echo "Pipeline bị dừng do lỗi"
