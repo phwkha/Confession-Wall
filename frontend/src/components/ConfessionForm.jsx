@@ -65,17 +65,17 @@ export default function ConfessionForm({ onConfessionCreated }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-card border border-rose-100 p-6 transition-all duration-300 hover:shadow-card-hover">
+    <div className="bg-slate-900/75 backdrop-blur-md rounded-2xl shadow-card border border-slate-800/80 hover:border-rose-950/60 p-6 transition-all duration-300 hover:shadow-card-hover">
       <div className="flex items-center gap-2 mb-4">
-        <div className="p-2 rounded-xl bg-rose-50 text-rose-500">
+        <div className="p-2 rounded-xl bg-rose-950/60 text-rose-400 border border-rose-900/50 shadow-[0_0_10px_rgba(225,29,72,0.25)]">
           <MessageSquare className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-slate-800">
+          <h2 className="text-lg font-bold text-slate-100">
             Gửi lời thú tội mới
           </h2>
-          <p className="text-xs text-slate-500">
-            Chia sẻ câu chuyện của bạn, tất cả đều được bảo mật
+          <p className="text-xs text-slate-400">
+            Chia sẻ câu chuyện của bạn trong bóng tối, tất cả đều được bảo mật
           </p>
         </div>
       </div>
@@ -84,9 +84,9 @@ export default function ConfessionForm({ onConfessionCreated }) {
       {errorMessage && (
         <div
           role="alert"
-          className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2.5 animate-fadeIn"
+          className="mb-4 p-3 rounded-xl bg-red-950/50 border border-red-850/60 text-red-300 text-sm flex items-start gap-2.5 animate-fadeIn"
         >
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
           <span className="font-medium">{errorMessage}</span>
         </div>
       )}
@@ -95,9 +95,9 @@ export default function ConfessionForm({ onConfessionCreated }) {
       {successMessage && (
         <div
           role="status"
-          className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm flex items-start gap-2.5 animate-fadeIn"
+          className="mb-4 p-3 rounded-xl bg-emerald-950/50 border border-emerald-800/60 text-emerald-300 text-sm flex items-start gap-2.5 animate-fadeIn"
         >
-          <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
           <span className="font-medium">{successMessage}</span>
         </div>
       )}
@@ -107,7 +107,7 @@ export default function ConfessionForm({ onConfessionCreated }) {
         <div>
           <label
             htmlFor="confession-content"
-            className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider"
+            className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider"
           >
             Nội dung thú tội <span className="text-rose-500">*</span>
           </label>
@@ -123,9 +123,9 @@ export default function ConfessionForm({ onConfessionCreated }) {
             onKeyDown={handleKeyDown}
             placeholder="Bạn đang nghĩ gì? Hãy chia sẻ thật lòng tại đây... (Nhấn Ctrl+Enter để gửi nhanh)"
             disabled={isSubmitting}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500 transition-all resize-none text-sm leading-relaxed disabled:bg-slate-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 rounded-xl border border-slate-800 bg-slate-950/70 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-600 transition-all resize-none text-sm leading-relaxed disabled:bg-slate-950/40 disabled:cursor-not-allowed"
           />
-          <div className="flex justify-between items-center mt-1 text-xs text-slate-400">
+          <div className="flex justify-between items-center mt-1 text-xs text-slate-500">
             <span>Không chia sẻ thông tin xúc phạm hoặc nhạy cảm</span>
             <span>{content.length} ký tự</span>
           </div>
@@ -136,12 +136,12 @@ export default function ConfessionForm({ onConfessionCreated }) {
           <div>
             <label
               htmlFor="confession-author"
-              className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider"
+              className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider"
             >
               Tên của bạn (Tùy chọn)
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                 <User className="w-4 h-4" />
               </div>
               <input
@@ -152,7 +152,7 @@ export default function ConfessionForm({ onConfessionCreated }) {
                 placeholder="Ẩn danh (tuỳ chọn)"
                 disabled={isSubmitting}
                 maxLength={50}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500 transition-all text-sm disabled:bg-slate-50 disabled:cursor-not-allowed"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950/70 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-600 transition-all text-sm disabled:bg-slate-950/40 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function ConfessionForm({ onConfessionCreated }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 px-6 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 active:scale-[0.98] text-white font-medium text-sm shadow-md shadow-rose-500/20 hover:shadow-rose-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full py-2.5 px-6 rounded-xl bg-gradient-to-r from-rose-700 via-rose-600 to-rose-800 hover:from-rose-600 hover:to-rose-700 active:scale-[0.98] text-rose-50 font-medium text-sm shadow-lg shadow-rose-950/50 hover:shadow-rose-900/60 border border-rose-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isSubmitting ? (
                 <>

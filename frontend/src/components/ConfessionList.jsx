@@ -1,30 +1,30 @@
 import React from 'react';
 import ConfessionCard from './ConfessionCard';
-import { HeartCrack, MessageSquarePlus } from 'lucide-react';
+import { MessageSquarePlus } from 'lucide-react';
 
 /**
- * Skeleton placeholder for loading state
+ * Skeleton placeholder for loading state in Dark Gothic theme
  */
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-card animate-pulse flex flex-col justify-between h-48">
+    <div className="bg-slate-900/60 rounded-2xl p-5 border border-slate-800/60 shadow-card animate-pulse flex flex-col justify-between h-48">
       <div>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-full bg-slate-200" />
+          <div className="w-8 h-8 rounded-full bg-slate-800" />
           <div className="space-y-1.5 flex-1">
-            <div className="h-3.5 bg-slate-200 rounded w-24" />
-            <div className="h-2.5 bg-slate-200 rounded w-16" />
+            <div className="h-3.5 bg-slate-800 rounded w-24" />
+            <div className="h-2.5 bg-slate-800/60 rounded w-16" />
           </div>
         </div>
         <div className="space-y-2">
-          <div className="h-3 bg-slate-200 rounded w-full" />
-          <div className="h-3 bg-slate-200 rounded w-5/6" />
-          <div className="h-3 bg-slate-200 rounded w-3/4" />
+          <div className="h-3 bg-slate-800/70 rounded w-full" />
+          <div className="h-3 bg-slate-800/70 rounded w-5/6" />
+          <div className="h-3 bg-slate-800/70 rounded w-3/4" />
         </div>
       </div>
-      <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-        <div className="h-6 bg-slate-200 rounded-full w-24" />
-        <div className="h-3 bg-slate-200 rounded w-12" />
+      <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between">
+        <div className="h-6 bg-slate-800 rounded-full w-24" />
+        <div className="h-3 bg-slate-800/60 rounded w-12" />
       </div>
     </div>
   );
@@ -46,14 +46,14 @@ export default function ConfessionList({ confessions = [], isLoading = false, on
 
   if (!confessions || confessions.length === 0) {
     return (
-      <div className="text-center py-16 px-4 bg-white rounded-2xl border border-dashed border-rose-200 shadow-sm">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-rose-50 flex items-center justify-center text-rose-400">
+      <div className="text-center py-16 px-4 bg-slate-900/60 backdrop-blur-md rounded-2xl border border-dashed border-rose-950/60 shadow-card">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-rose-950/50 border border-rose-900/50 flex items-center justify-center text-rose-400 shadow-[0_0_15px_rgba(225,29,72,0.2)]">
           <MessageSquarePlus className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-slate-700 mb-1">
+        <h3 className="text-lg font-bold text-slate-200 mb-1">
           Chưa có lời thú tội nào
         </h3>
-        <p className="text-sm text-slate-500 max-w-md mx-auto">
+        <p className="text-sm text-slate-400 max-w-md mx-auto">
           Hãy là người đầu tiên chia sẻ tâm sự lên bức tường thú tội. Mọi điều bạn viết đều hoàn toàn ẩn danh!
         </p>
       </div>

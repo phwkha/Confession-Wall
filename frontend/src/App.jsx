@@ -58,7 +58,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans relative overflow-x-hidden selection:bg-rose-950 selection:text-rose-300">
       <Ambient3DBackground />
       <Header totalCount={confessions.length} />
 
@@ -68,16 +68,16 @@ export default function App() {
           <ConfessionForm onConfessionCreated={handleConfessionCreated} />
         </section>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200/60">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-800/80">
           <div>
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
               Bức tường chia sẻ
-              <span className="text-xs font-normal px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              <span className="text-xs font-normal px-2.5 py-0.5 rounded-full bg-rose-950/60 text-rose-300 border border-rose-900/50 shadow-[0_0_8px_rgba(225,29,72,0.2)]">
                 Mới nhất
               </span>
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Những tâm tư thật lòng từ khắp mọi nơi
+            <p className="text-xs text-slate-400 mt-0.5">
+              Những tâm tư thật lòng trong màn đêm huyền bí
             </p>
           </div>
 
@@ -85,23 +85,23 @@ export default function App() {
             type="button"
             onClick={() => fetchConfessionsData(true)}
             disabled={isLoading || isRefreshing}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 hover:border-rose-900/60 text-slate-300 hover:text-rose-300 text-xs font-medium shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isRefreshing ? 'animate-spin text-rose-500' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-400 ${isRefreshing ? 'animate-spin text-rose-500' : ''}`} />
             <span>Làm mới</span>
           </button>
         </div>
 
         {errorMessage && (
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm flex items-center justify-between gap-3 shadow-sm">
+          <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-800/60 text-amber-300 text-sm flex items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-2.5">
-              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
               <span>{errorMessage}</span>
             </div>
             <button
               type="button"
               onClick={() => fetchConfessionsData(true)}
-              className="text-xs font-semibold underline text-amber-900 hover:text-amber-700 flex-shrink-0"
+              className="text-xs font-semibold underline text-amber-300 hover:text-amber-100 flex-shrink-0"
             >
               Thử lại
             </button>
@@ -117,10 +117,10 @@ export default function App() {
         </section>
       </main>
 
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-auto relative z-10">
+      <footer className="bg-slate-950/80 backdrop-blur-sm border-t border-slate-900 py-6 text-center text-xs text-slate-500 mt-auto relative z-10">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>&copy; 2026 Bức Tường Thú Tội (Confession Wall). Mọi thông tin đều được ẩn danh.</span>
-          <span className="text-rose-500 font-medium">Được xây dựng với React, Vite & Tailwind CSS</span>
+          <span className="text-rose-400 font-medium">Dark Gothic Romance Edition &bull; React, Three.js & Tailwind CSS</span>
         </div>
       </footer>
     </div>
