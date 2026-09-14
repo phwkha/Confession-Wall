@@ -84,20 +84,31 @@ pipeline {
             }
         }
 
-        stage('5. Local Deploy') {
-            steps {
-                echo '🔄 [Step 5] Đang cập nhật ứng dụng trên máy chủ (kha-dev)...'
-                script {
-                    sh """
-                        export DOCKER_USERNAME=${DOCKER_HUB_USER}
-                        export IMAGE_TAG=${IMAGE_TAG}
-                        
-                        echo "===> Khởi chạy lại container Backend và Frontend với phiên bản #${IMAGE_TAG}..."
-                        docker compose up -d --no-deps backend frontend
-                    """
+        stage('5. Deploy via SSH to Host') {
+                steps {
+                    echo "🚀 [Step 5] Đang kết nối SSH vào host để deploy bản #${IMAGE_TAG}..."
+                    sshagent(credentials: ['deploy-server-ssh']) {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no phwkha@172.17.0.1 << 'EOF'
+                                set -e
+                                cd /home/phwkha/confession-wall
+                                echo "===> Cập nhật biến môi trường phiên bản #${IMAGE_TAG}..."
+                                export DOCKER_USERNAME=${DOCKER_HUB_USER}
+                                export IMAGE_TAG=${IMAGE_TAG}
+                                
+                                echo "===> Kéo các images mới nhất từ Docker Hub..."
+                                docker compose pull backend frontend
+                                
+                                echo "===> Khởi động lại Backend & Frontend với file .env chuẩn trên host..."
+                                docker compose up -d --no-deps backend frontend
+                                
+                                echo "===> Kiểm tra trạng thái các container sau khi deploy:"
+                                docker compose ps
+                            EOF
+                        """
+                    }
                 }
             }
-        }
     }
 
     post {
