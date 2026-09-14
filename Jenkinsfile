@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()
+        pollSCM('H/2 * * * *')
+    }
+
     environment {
         // =========================================================================
         // 1. CẤU HÌNH DOCKER HUB & PHIÊN BẢN IMAGE
@@ -131,7 +136,7 @@ pipeline {
                                 docker logs confession_backend --tail 40
                                 exit 1
                             fi
-                        EOF
+EOF
                     """
                 }
             }
