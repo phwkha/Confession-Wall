@@ -90,10 +90,10 @@ pipeline {
                 sshagent(credentials: ['deploy-server-ssh']) {
                     sh """
                         # 1. Đồng bộ file docker-compose.yml mới nhất từ repository sang host
-                        scp -o StrictHostKeyChecking=no docker-compose.yml phwkha@172.17.0.1:/home/phwkha/confession-wall/docker-compose.yml
+                        scp -o StrictHostKeyChecking=accept-new docker-compose.yml phwkha@172.17.0.1:/home/phwkha/confession-wall/docker-compose.yml
 
                         # 2. Thực thi triển khai trên máy chủ host với file .env đã có sẵn
-                        ssh -o StrictHostKeyChecking=no phwkha@172.17.0.1 << 'EOF'
+                        ssh -o StrictHostKeyChecking=accept-new phwkha@172.17.0.1 << 'EOF'
                             set -e
                             cd /home/phwkha/confession-wall
 
