@@ -9,7 +9,7 @@ const HEART_COUNT = 32;
 const CRYSTAL_COUNT = 20;
 const DUST_COUNT = 120;
 
-function FloatingRubyHearts() {
+function FloatingAmethystHearts() {
   const meshRef = useRef();
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const geometry = useMemo(
@@ -25,11 +25,12 @@ function FloatingRubyHearts() {
 
   const colors = useMemo(
     () => [
-      new THREE.Color('#4c0519'),
-      new THREE.Color('#881337'),
-      new THREE.Color('#9f1239'),
-      new THREE.Color('#be123c'),
-      new THREE.Color('#e11d48'),
+      new THREE.Color('#7c3aed'),
+      new THREE.Color('#9333ea'),
+      new THREE.Color('#a855f7'),
+      new THREE.Color('#c084fc'),
+      new THREE.Color('#d8b4fe'),
+      new THREE.Color('#e879f9'),
     ],
     []
   );
@@ -92,12 +93,12 @@ function FloatingRubyHearts() {
   return (
     <instancedMesh ref={meshRef} args={[geometry, null, HEART_COUNT]}>
       <meshStandardMaterial
-        roughness={0.25}
+        roughness={0.18}
         metalness={0.75}
         transparent
-        opacity={0.8}
-        emissive="#4c0519"
-        emissiveIntensity={0.2}
+        opacity={0.88}
+        emissive="#a855f7"
+        emissiveIntensity={0.4}
       />
     </instancedMesh>
   );
@@ -213,9 +214,9 @@ function LuminousDust() {
       </bufferGeometry>
       <pointsMaterial
         size={0.06}
-        color="#fda4af"
+        color="#e9d5ff"
         transparent
-        opacity={0.55}
+        opacity={0.65}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
       />
@@ -233,12 +234,12 @@ export default function Ambient3DBackground() {
           gl={{ antialias: false, alpha: true, powerPreference: 'low-power' }}
           className="w-full h-full pointer-events-none"
         >
-          <fog attach="fog" args={['#020617', 5, 20]} />
-          <ambientLight intensity={0.4} />
-          <directionalLight position={[0, 8, 4]} color="#fecdd3" intensity={0.5} />
-          <pointLight position={[5, 5, 3]} color="#e11d48" intensity={2.2} distance={20} />
-          <pointLight position={[-5, -4, 2]} color="#9333ea" intensity={1.5} distance={16} />
-          <FloatingRubyHearts />
+          <fog attach="fog" args={['#020617', 5, 22]} />
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[0, 8, 4]} color="#f3e8ff" intensity={0.6} />
+          <pointLight position={[5, 5, 3]} color="#a855f7" intensity={2.6} distance={22} />
+          <pointLight position={[-5, -4, 2]} color="#6366f1" intensity={2.0} distance={18} />
+          <FloatingAmethystHearts />
           <FloatingCrystals />
           <LuminousDust />
         </Canvas>

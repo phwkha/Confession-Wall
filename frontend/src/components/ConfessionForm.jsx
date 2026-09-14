@@ -161,7 +161,7 @@ export default function ConfessionForm({ onConfessionCreated }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 px-6 rounded-xl bg-gradient-to-r from-rose-700 via-rose-600 to-rose-800 hover:from-rose-600 hover:to-rose-700 active:scale-[0.98] text-rose-50 font-medium text-sm shadow-lg shadow-rose-950/50 hover:shadow-rose-900/60 border border-rose-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full py-2.5 px-6 rounded-xl bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 hover:from-purple-600 hover:to-purple-700 active:scale-[0.98] text-purple-50 font-medium text-sm shadow-lg shadow-purple-950/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] border border-purple-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isSubmitting ? (
                 <>

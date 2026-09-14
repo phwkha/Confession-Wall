@@ -120,13 +120,13 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={tiltStyle}
-      className="group bg-slate-900/75 backdrop-blur-md rounded-2xl p-5 border border-slate-800/80 hover:border-rose-900/60 shadow-card hover:shadow-card-hover transition-all duration-300 flex flex-col justify-between relative overflow-hidden will-change-transform"
+      className="group bg-slate-900/75 backdrop-blur-md rounded-2xl p-5 border border-slate-800/80 hover:border-purple-800/60 shadow-card hover:shadow-[0_0_25px_rgba(168,85,247,0.18)] transition-all duration-300 flex flex-col justify-between relative overflow-hidden will-change-transform"
     >
-      {/* Decorative top ruby gradient accent bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-900 via-rose-600 to-rose-950 opacity-70 group-hover:opacity-100 group-hover:shadow-[0_0_12px_rgba(225,29,72,0.6)] transition-all" />
+      {/* Decorative top amethyst gradient accent bar */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-950 via-purple-500 to-fuchsia-950 opacity-70 group-hover:opacity-100 group-hover:shadow-[0_0_14px_rgba(168,85,247,0.7)] transition-all" />
 
       {/* Subtle hover dynamic sheen */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/0 via-rose-500/5 to-rose-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/0 via-purple-500/5 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
       <div className="relative z-10">
         {/* Author & Timestamp Header */}
@@ -136,13 +136,13 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
               className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold ${
                 isAnonymous
                   ? 'bg-slate-800/90 text-slate-400 border border-slate-700/60'
-                  : 'bg-rose-950/70 text-rose-300 border border-rose-900/60 shadow-[0_0_8px_rgba(225,29,72,0.2)]'
+                  : 'bg-purple-950/70 text-purple-300 border border-purple-800/60 shadow-[0_0_8px_rgba(168,85,247,0.25)]'
               }`}
             >
               <User className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <span className="block font-medium text-slate-200 text-sm truncate group-hover:text-rose-200 transition-colors">
+              <span className="block font-medium text-slate-200 text-sm truncate group-hover:text-purple-200 transition-colors">
                 {authorName}
               </span>
               <span className="flex items-center gap-1 text-[11px] text-slate-400">
@@ -154,13 +154,13 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
             </div>
           </div>
 
-          <span className="text-[11px] font-mono text-slate-500 group-hover:text-rose-400/70 transition-colors">
+          <span className="text-[11px] font-mono text-slate-500 group-hover:text-purple-400/70 transition-colors">
             #{confession.id}
           </span>
         </div>
 
         {/* Message Content */}
-        <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-line break-words my-2 font-normal selection:bg-rose-950 selection:text-rose-300">
+        <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-line break-words my-2 font-normal selection:bg-purple-950 selection:text-purple-300">
           {confession.content}
         </div>
       </div>
@@ -174,21 +174,21 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
           aria-label={`Thả tim cho lời thú tội #${confession.id}, hiện có ${likes} tim`}
           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
             hasLiked
-              ? 'bg-rose-950/70 text-rose-300 border border-rose-800/70 shadow-[0_0_12px_rgba(225,29,72,0.3)]'
-              : 'bg-slate-800/80 text-slate-300 hover:bg-rose-950/50 hover:text-rose-200 border border-slate-700/60 hover:border-rose-900/60'
+              ? 'bg-purple-950/70 text-purple-200 border border-purple-700/70 shadow-[0_0_12px_rgba(168,85,247,0.35)]'
+              : 'bg-slate-800/80 text-slate-300 hover:bg-purple-950/50 hover:text-purple-200 border border-slate-700/60 hover:border-purple-800/60'
           }`}
         >
           <Heart
             className={`w-3.5 h-3.5 transition-transform ${
               hasLiked
-                ? 'fill-rose-500 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.8)]'
-                : 'text-slate-400 group-hover:text-rose-400'
-            } ${animateHeart ? 'scale-125 text-rose-500 fill-rose-500 animate-pulse' : ''}`}
+                ? 'fill-purple-400 text-purple-400 drop-shadow-[0_0_6px_rgba(192,132,252,0.9)]'
+                : 'text-slate-400 group-hover:text-purple-400'
+            } ${animateHeart ? 'scale-125 text-purple-400 fill-purple-400 animate-pulse' : ''}`}
           />
-          <span>❤️ Thả tim</span>
+          <span>💜 Thả tim</span>
           <span
             className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
-              hasLiked ? 'bg-rose-900/80 text-rose-200' : 'bg-slate-700/60 text-slate-300'
+              hasLiked ? 'bg-purple-900/80 text-purple-200' : 'bg-slate-700/60 text-slate-300'
             }`}
           >
             {likes}
