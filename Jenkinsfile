@@ -24,8 +24,14 @@ pipeline {
             steps {
                 echo '🧪 [Step 2] Đang chạy bộ kiểm thử tự động (Unit Test Spring Boot)...'
                 dir('backend') {
-                    sh 'chmod +x mvnw'
-                    sh './mvnw clean test'
+                    sh '''
+                        if [ ! -f .mvn/wrapper/maven-wrapper.jar ]; then
+                            echo "===> Đang tải maven-wrapper.jar tạm thời cho quá trình test..."
+                            curl -sSL -o .mvn/wrapper/maven-wrapper.jar https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar
+                        fi
+                        chmod +x mvnw
+                        ./mvnw clean test
+                    '''
                 }
             }
         }

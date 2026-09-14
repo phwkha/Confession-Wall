@@ -13,7 +13,6 @@ target/
 *.tar.gz
 *.rar
 hs_err_pid*
-replay_pid*
 .mvn/wrapper/maven-wrapper.jar
 
 # Frontend / Node & React & Vite
