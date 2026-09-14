@@ -15,14 +15,14 @@ pipeline {
     stages {
         stage('1. Checkout Code') {
             steps {
-                echo '📥 [Step 1] Đang tải mã nguồn mới nhất từ GitHub...'
+                echo 'Đang tải mã nguồn mới nhất từ GitHub...'
                 checkout scm
             }
         }
 
         stage('2. Automated Testing') {
             steps {
-                echo '🧪 [Step 2] Đang chạy bộ kiểm thử tự động (Unit Test Spring Boot)...'
+                echo 'Đang chạy bộ kiểm thử tự động (Unit Test Spring Boot)...'
                 dir('backend') {
                     sh '''
                         if [ ! -f .mvn/wrapper/maven-wrapper.jar ]; then
@@ -38,7 +38,7 @@ pipeline {
 
         stage('3. Build Docker Images') {
             steps {
-                echo '🐳 [Step 3] Test passed! Đang đóng gói Docker Images cho Backend và Frontend...'
+                echo 'Test passed! Đang đóng gói Docker Images cho Backend và Frontend...'
                 script {
                     // Build Backend Image (Spring Boot 3)
                     sh """
@@ -61,7 +61,7 @@ pipeline {
 
         stage('4. Push to Docker Hub') {
             steps {
-                echo '🚀 [Step 4] Đang đăng nhập và đẩy Images lên Docker Hub...'
+                echo 'Đang đăng nhập và đẩy Images lên Docker Hub...'
                 script {
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDS_ID}", 
                                                      usernameVariable: 'DH_USER', 
@@ -86,20 +86,17 @@ pipeline {
 
         stage('5. Deploy via SSH to Host') {
             steps {
-                echo "🚀 [Step 5] Đang kết nối SSH vào host để deploy bản #${IMAGE_TAG}..."
+                echo "Đang kết nối SSH vào host để deploy bản #${IMAGE_TAG}..."
                 sshagent(credentials: ['deploy-server-ssh']) {
                     sh """
-                        # 1. Đồng bộ file docker-compose.yml mới nhất từ repository sang host
                         scp -o StrictHostKeyChecking=accept-new docker-compose.yml phwkha@172.17.0.1:/home/phwkha/confession-wall/docker-compose.yml
 
-                        # 2. Thực thi triển khai trên máy chủ host với file .env đã có sẵn
                         ssh -o StrictHostKeyChecking=accept-new phwkha@172.17.0.1 << 'EOF'
                             set -e
                             cd /home/phwkha/confession-wall
 
-                            # Kiểm tra xem file .env có tồn tại trên host không
                             if [ ! -f .env ]; then
-                                echo "❌ [LỖI] Không tìm thấy file /home/phwkha/confession-wall/.env trên host!"
+                                echo "Không tìm thấy file /home/phwkha/confession-wall/.env trên host!"
                                 exit 1
                             fi
 
@@ -121,7 +118,7 @@ pipeline {
                             for i in \$(seq 1 10); do
                                 HTTP_CODE=\$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:80/api/confessions || echo "000")
                                 if [ "\$HTTP_CODE" = "200" ]; then
-                                    echo "✅ [THÀNH CÔNG] API phản hồi 200 OK sau \${i} lần thử! Backend & CSDL đã sẵn sàng."
+                                    echo "API phản hồi 200 OK sau \${i} lần thử! Backend & CSDL đã sẵn sàng."
                                     SUCCESS=true
                                     break
                                 fi
@@ -130,7 +127,7 @@ pipeline {
                             done
 
                             if [ "\$SUCCESS" != "true" ]; then
-                                echo "❌ [LỖI] Backend không phản hồi 200 OK sau 30 giây! Nhật ký lỗi Backend:"
+                                echo "Backend không phản hồi 200 OK sau 30 giây! Nhật ký lỗi Backend:"
                                 docker logs confession_backend --tail 40
                                 exit 1
                             fi
@@ -143,14 +140,14 @@ pipeline {
 
     post {
         always {
-            echo '🧹 [Cleanup] Dọn dẹp các images dangling/trung gian để tránh đầy bộ nhớ...'
+            echo 'Dọn dẹp các images dangling/trung gian'
             sh 'docker image prune -f'
         }
         success {
-            echo "🎉 [THÀNH CÔNG] Tất cả bài test đều PASS và bản build #${IMAGE_TAG} đã được deploy an toàn lên máy chủ!"
+            echo "Tất cả bài test đều PASS và bản build #${IMAGE_TAG} đã được deploy "
         }
         failure {
-            echo "❌ [THẤT BẠI] Pipeline bị dừng do lỗi kiểm thử hoặc đóng gói! Môi trường Production vẫn an toàn."
+            echo "Pipeline bị dừng do lỗi"
         }
     }
 }
