@@ -85,30 +85,60 @@ pipeline {
         }
 
         stage('5. Deploy via SSH to Host') {
-                steps {
-                    echo "🚀 [Step 5] Đang kết nối SSH vào host để deploy bản #${IMAGE_TAG}..."
-                    sshagent(credentials: ['deploy-server-ssh']) {
-                        sh """
-                            ssh -o StrictHostKeyChecking=no phwkha@172.17.0.1 << 'EOF'
-                                set -e
-                                cd /home/phwkha/confession-wall
-                                echo "===> Cập nhật biến môi trường phiên bản #${IMAGE_TAG}..."
-                                export DOCKER_USERNAME=${DOCKER_HUB_USER}
-                                export IMAGE_TAG=${IMAGE_TAG}
-                                
-                                echo "===> Kéo các images mới nhất từ Docker Hub..."
-                                docker compose pull backend frontend
-                                
-                                echo "===> Khởi động lại Backend & Frontend với file .env chuẩn trên host..."
-                                docker compose up -d --no-deps backend frontend
-                                
-                                echo "===> Kiểm tra trạng thái các container sau khi deploy:"
-                                docker compose ps
-                            EOF
-                        """
-                    }
+            steps {
+                echo "🚀 [Step 5] Đang kết nối SSH vào host để deploy bản #${IMAGE_TAG}..."
+                sshagent(credentials: ['deploy-server-ssh']) {
+                    sh """
+                        # 1. Đồng bộ file docker-compose.yml mới nhất từ repository sang host
+                        scp -o StrictHostKeyChecking=no docker-compose.yml phwkha@172.17.0.1:/home/phwkha/confession-wall/docker-compose.yml
+
+                        # 2. Thực thi triển khai trên máy chủ host với file .env đã có sẵn
+                        ssh -o StrictHostKeyChecking=no phwkha@172.17.0.1 << 'EOF'
+                            set -e
+                            cd /home/phwkha/confession-wall
+
+                            # Kiểm tra xem file .env có tồn tại trên host không
+                            if [ ! -f .env ]; then
+                                echo "❌ [LỖI] Không tìm thấy file /home/phwkha/confession-wall/.env trên host!"
+                                exit 1
+                            fi
+
+                            echo "===> Cập nhật biến môi trường phiên bản #${IMAGE_TAG}..."
+                            export DOCKER_USERNAME=${DOCKER_HUB_USER}
+                            export IMAGE_TAG=${IMAGE_TAG}
+
+                            echo "===> Kéo các images mới nhất từ Docker Hub..."
+                            docker compose pull backend frontend
+
+                            echo "===> Khởi động lại Backend & Frontend với file .env chuẩn trên host..."
+                            docker compose up -d --no-deps backend frontend
+
+                            echo "===> Kiểm tra trạng thái các container sau khi deploy:"
+                            docker compose ps
+
+                            echo "===> Đang kiểm tra sức khỏe ứng dụng (Health Check qua Nginx :80)..."
+                            SUCCESS=false
+                            for i in \$(seq 1 10); do
+                                HTTP_CODE=\$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:80/api/confessions || echo "000")
+                                if [ "\$HTTP_CODE" = "200" ]; then
+                                    echo "✅ [THÀNH CÔNG] API phản hồi 200 OK sau \${i} lần thử! Backend & CSDL đã sẵn sàng."
+                                    SUCCESS=true
+                                    break
+                                fi
+                                echo "   ...Chờ Backend khởi động và kết nối CSDL (lần \${i}/10, HTTP code: \$HTTP_CODE)..."
+                                sleep 3
+                            done
+
+                            if [ "\$SUCCESS" != "true" ]; then
+                                echo "❌ [LỖI] Backend không phản hồi 200 OK sau 30 giây! Nhật ký lỗi Backend:"
+                                docker logs confession_backend --tail 40
+                                exit 1
+                            fi
+                        EOF
+                    """
                 }
             }
+        }
     }
 
     post {
