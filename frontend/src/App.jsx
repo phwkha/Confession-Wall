@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import ConfessionForm from './components/ConfessionForm';
 import ConfessionList from './components/ConfessionList';
+import Ambient3DBackground from './components/3d/Ambient3DBackground';
 import { getConfessions } from './services/api';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 
@@ -11,7 +12,6 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Fetch confessions from backend API
   const fetchConfessionsData = useCallback(async (showRefreshingSpinner = false) => {
     if (showRefreshingSpinner) {
       setIsRefreshing(true);
@@ -44,13 +44,11 @@ export default function App() {
     fetchConfessionsData();
   }, [fetchConfessionsData]);
 
-  // When a new confession is submitted, prepend it to the top of the feed
   const handleConfessionCreated = (newConfession) => {
     if (!newConfession) return;
     setConfessions((prev) => [newConfession, ...prev]);
   };
 
-  // When a like count is updated in a child card, sync state
   const handleLikeUpdate = (confessionId, newLikeCount) => {
     setConfessions((prev) =>
       prev.map((item) =>
@@ -60,19 +58,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* App Header */}
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans relative overflow-x-hidden">
+      <Ambient3DBackground />
       <Header totalCount={confessions.length} />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Confession Submission Form */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 relative z-10">
         <section aria-labelledby="form-heading">
           <h2 id="form-heading" className="sr-only">Biểu mẫu gửi lời thú tội</h2>
           <ConfessionForm onConfessionCreated={handleConfessionCreated} />
         </section>
 
-        {/* Section Heading & Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200/60">
           <div>
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -97,7 +92,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* Global Error Banner */}
         {errorMessage && (
           <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm flex items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-2.5">
@@ -114,7 +108,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Confession Cards Grid */}
         <section aria-label="Danh sách các lời thú tội">
           <ConfessionList
             confessions={confessions}
@@ -124,8 +117,7 @@ export default function App() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-auto">
+      <footer className="bg-white/80 backdrop-blur-sm border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-auto relative z-10">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>&copy; 2026 Bức Tường Thú Tội (Confession Wall). Mọi thông tin đều được ẩn danh.</span>
           <span className="text-rose-500 font-medium">Được xây dựng với React, Vite & Tailwind CSS</span>

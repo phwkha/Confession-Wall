@@ -1,16 +1,14 @@
 import React from 'react';
-import { Heart, Sparkles, ShieldCheck } from 'lucide-react';
+import { Sparkles, ShieldCheck } from 'lucide-react';
+import HeaderHeart3D from './3d/HeaderHeart3D';
 
 export default function Header({ totalCount = 0 }) {
   return (
     <header className="bg-white/80 backdrop-blur-md border-b border-rose-100 sticky top-0 z-30 transition-all shadow-sm">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Brand & Titles */}
           <div className="flex items-center gap-3 text-center sm:text-left">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center shadow-md shadow-rose-500/20 transform hover:scale-105 transition-transform">
-              <Heart className="w-6 h-6 text-white fill-white" />
-            </div>
+            <HeaderHeart3D />
             <div>
               <div className="flex items-center gap-2 justify-center sm:justify-start">
                 <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 bg-clip-text text-transparent">
@@ -27,7 +25,6 @@ export default function Header({ totalCount = 0 }) {
             </div>
           </div>
 
-          {/* Badges / Meta */}
           <div className="flex items-center gap-3">
             <div className="inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200/70 px-3 py-1.5 rounded-full">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
