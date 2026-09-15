@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/confessions")
-@CrossOrigin(origins = "*")
 public class ConfessionController {
 
     private final ConfessionService confessionService;

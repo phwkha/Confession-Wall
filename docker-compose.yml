@@ -42,6 +42,7 @@ services:
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASS: ${POSTGRES_PASSWORD:-postgres}
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:8080,http://localhost,http://127.0.0.1:5173,http://127.0.0.1:8080,http://127.0.0.1}
     # Đóng port 8080 ra ngoài host, Nginx reverse proxy sẽ gọi qua http://backend:8080 trong mạng nội bộ
     # ports:
     #   - "8080:8080"

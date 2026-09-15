@@ -10,7 +10,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api/realtime")
-@CrossOrigin(origins = "*")
 public class RealtimeController {
 
     private final RealtimeService realtimeService;
