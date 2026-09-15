@@ -187,9 +187,7 @@ export default function CommentModal({
       // Reset form
       setContent('');
       setAuthor('');
-      if (onCommentAdded) {
-        onCommentAdded(confession.id, newComment);
-      }
+      onCommentAdded?.(confession.id, newComment);
     } catch (err) {
       console.error('Lỗi khi gửi bình luận:', err);
       setErrorMessage(
@@ -222,6 +220,12 @@ export default function CommentModal({
   return (
     <div
       onClick={handleBackdropClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      }}
+      tabIndex={-1}
       className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 transition-all duration-300"
       role="dialog"
       aria-modal="true"
