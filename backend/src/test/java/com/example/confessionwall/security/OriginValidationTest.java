@@ -160,4 +160,51 @@ class OriginValidationTest {
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @DisplayName("Dynamic domain: should accept request when Origin host matches Host header (e.g. Tailscale domain)")
+    void testDynamicDomain_TailscaleHostAndOrigin_shouldSucceed() throws Exception {
+        mockMvc.perform(get("/api/confessions")
+                        .header("Host", "kha-dev.impala-tritone.ts.net")
+                        .header("Origin", "https://kha-dev.impala-tritone.ts.net"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Dynamic domain: should accept request when Referer host matches Host header")
+    void testDynamicDomain_TailscaleReferer_shouldSucceed() throws Exception {
+        mockMvc.perform(get("/api/confessions")
+                        .header("Host", "kha-dev.impala-tritone.ts.net")
+                        .header("Referer", "https://kha-dev.impala-tritone.ts.net/realtime"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Dynamic domain: should accept request when Origin host matches X-Forwarded-Host")
+    void testDynamicDomain_XForwardedHostAndOrigin_shouldSucceed() throws Exception {
+        mockMvc.perform(get("/api/confessions")
+                        .header("X-Forwarded-Host", "kha-dev.impala-tritone.ts.net")
+                        .header("Origin", "https://kha-dev.impala-tritone.ts.net"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Dynamic domain: should reject request when Origin does not match Host header")
+    void testDynamicDomain_MismatchedOrigin_shouldReturn403() throws Exception {
+        mockMvc.perform(get("/api/confessions")
+                        .header("Host", "kha-dev.impala-tritone.ts.net")
+                        .header("Origin", "http://evil.com"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Dynamic domain: CORS Preflight OPTIONS for same host should return 200 with matching Allow-Origin")
+    void testCorsPreflight_DynamicDomain_shouldReturn200() throws Exception {
+        mockMvc.perform(options("/api/confessions")
+                        .header("Host", "kha-dev.impala-tritone.ts.net")
+                        .header(HttpHeaders.ORIGIN, "https://kha-dev.impala-tritone.ts.net")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "https://kha-dev.impala-tritone.ts.net"));
+    }
 }

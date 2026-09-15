@@ -42,6 +42,75 @@ public class CorsProperties {
         return false;
     }
 
+    public boolean isAllowedOrigin(String origin, jakarta.servlet.http.HttpServletRequest request) {
+        if (origin == null || origin.isBlank()) {
+            return false;
+        }
+        if (isAllowedOrigin(origin)) {
+            return true;
+        }
+        return isSameHost(origin, request);
+    }
+
+    public boolean isSameHost(String origin, jakarta.servlet.http.HttpServletRequest request) {
+        if (origin == null || origin.isBlank() || request == null) {
+            return false;
+        }
+        String originHost = extractHost(origin);
+        if (originHost == null || originHost.isBlank()) {
+            return false;
+        }
+        String requestHost = extractRequestHost(request);
+        if (requestHost == null || requestHost.isBlank()) {
+            return false;
+        }
+        return originHost.equalsIgnoreCase(requestHost);
+    }
+
+    public static String extractHost(String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        String trimmed = url.trim();
+        try {
+            URI uri = URI.create(trimmed);
+            String host = uri.getHost();
+            if (host != null && !host.isBlank()) {
+                return host.toLowerCase();
+            }
+        } catch (Exception ignored) {
+        }
+        // Fallback for raw host:port or malformed URI
+        String s = trimmed.replaceFirst("^[a-zA-Z]+://", "");
+        int slashIdx = s.indexOf('/');
+        if (slashIdx != -1) {
+            s = s.substring(0, slashIdx);
+        }
+        int colonIdx = s.indexOf(':');
+        if (colonIdx != -1) {
+            s = s.substring(0, colonIdx);
+        }
+        return s.toLowerCase();
+    }
+
+    public static String extractRequestHost(jakarta.servlet.http.HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        String forwardedHost = request.getHeader("X-Forwarded-Host");
+        if (forwardedHost != null && !forwardedHost.isBlank()) {
+            String first = forwardedHost.split(",")[0].trim();
+            return extractHost("http://" + first);
+        }
+        String hostHeader = request.getHeader("Host");
+        if (hostHeader != null && !hostHeader.isBlank()) {
+            String first = hostHeader.split(",")[0].trim();
+            return extractHost("http://" + first);
+        }
+        String serverName = request.getServerName();
+        return serverName != null && !serverName.isBlank() ? serverName.toLowerCase() : null;
+    }
+
     public static String normalizeOrigin(String origin) {
         if (origin == null) {
             return "";

@@ -32,7 +32,7 @@ public class OriginValidationInterceptor implements HandlerInterceptor {
 
         // 1. Validate Origin header if present
         if (origin != null && !origin.isBlank()) {
-            if ("null".equalsIgnoreCase(origin.trim()) || !corsProperties.isAllowedOrigin(origin)) {
+            if ("null".equalsIgnoreCase(origin.trim()) || !corsProperties.isAllowedOrigin(origin, request)) {
                 throw new UnauthorizedOriginException("Yêu cầu bị từ chối: Nguồn gốc truy cập (Origin) không được cấp phép.");
             }
             return true;
@@ -41,7 +41,7 @@ public class OriginValidationInterceptor implements HandlerInterceptor {
         // 2. Validate Referer header if present
         if (referer != null && !referer.isBlank()) {
             String extractedOrigin = extractOriginFromReferer(referer);
-            if (extractedOrigin == null || !corsProperties.isAllowedOrigin(extractedOrigin)) {
+            if (extractedOrigin == null || !corsProperties.isAllowedOrigin(extractedOrigin, request)) {
                 throw new UnauthorizedOriginException("Yêu cầu bị từ chối: Địa chỉ chuyển tiếp (Referer) không hợp lệ.");
             }
             return true;

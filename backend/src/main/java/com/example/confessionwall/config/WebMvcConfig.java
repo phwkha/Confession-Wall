@@ -30,6 +30,27 @@ public class WebMvcConfig implements WebMvcConfigurer {
         this.corsProperties = corsProperties;
     }
 
+    @org.springframework.context.annotation.Bean
+    public org.springframework.web.filter.CorsFilter corsFilter() {
+        org.springframework.web.cors.CorsConfigurationSource source = request -> {
+            String origin = request.getHeader(org.springframework.http.HttpHeaders.ORIGIN);
+            if (origin == null || origin.isBlank()) {
+                return null;
+            }
+            if (corsProperties != null && corsProperties.isAllowedOrigin(origin, request)) {
+                org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
+                config.addAllowedOrigin(origin);
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(List.of("*"));
+                config.setAllowCredentials(true);
+                config.setMaxAge(3600L);
+                return config;
+            }
+            return null;
+        };
+        return new org.springframework.web.filter.CorsFilter(source);
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         List<String> origins = corsProperties != null
