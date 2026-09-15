@@ -23,14 +23,17 @@ function SkeletonCard() {
         </div>
       </div>
       <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between">
-        <div className="h-6 bg-slate-800 rounded-full w-24" />
+        <div className="flex items-center gap-2">
+          <div className="h-6 bg-slate-800 rounded-full w-20" />
+          <div className="h-6 bg-slate-800 rounded-full w-20" />
+        </div>
         <div className="h-3 bg-slate-800/60 rounded w-12" />
       </div>
     </div>
   );
 }
 
-export default function ConfessionList({ confessions = [], isLoading = false, onLikeUpdate }) {
+export default function ConfessionList({ confessions = [], isLoading = false, onLikeUpdate, onOpenComments }) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -67,6 +70,7 @@ export default function ConfessionList({ confessions = [], isLoading = false, on
           key={item.id}
           confession={item}
           onLikeUpdate={onLikeUpdate}
+          onOpenComments={onOpenComments}
         />
       ))}
     </div>

@@ -23,6 +23,9 @@ public class Confession {
     @Column(nullable = false)
     private Integer likes = 0;
 
+    @Column(name = "comment_count", nullable = false)
+    private Integer commentCount = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -33,14 +36,20 @@ public class Confession {
         this.content = content;
         this.author = (author == null || author.trim().isEmpty()) ? "Ẩn danh" : author.trim();
         this.likes = 0;
+        this.commentCount = 0;
         this.createdAt = LocalDateTime.now();
     }
 
     public Confession(Long id, String content, String author, Integer likes, LocalDateTime createdAt) {
+        this(id, content, author, likes, 0, createdAt);
+    }
+
+    public Confession(Long id, String content, String author, Integer likes, Integer commentCount, LocalDateTime createdAt) {
         this.id = id;
         this.content = content;
         this.author = (author == null || author.trim().isEmpty()) ? "Ẩn danh" : author.trim();
         this.likes = (likes == null) ? 0 : likes;
+        this.commentCount = (commentCount == null) ? 0 : commentCount;
         this.createdAt = (createdAt == null) ? LocalDateTime.now() : createdAt;
     }
 
@@ -54,6 +63,9 @@ public class Confession {
         }
         if (this.likes == null) {
             this.likes = 0;
+        }
+        if (this.commentCount == null) {
+            this.commentCount = 0;
         }
     }
 
@@ -89,6 +101,14 @@ public class Confession {
         this.likes = likes;
     }
 
+    public Integer getCommentCount() {
+        return commentCount != null ? commentCount : 0;
+    }
+
+    public void setCommentCount(Integer commentCount) {
+        this.commentCount = commentCount != null ? commentCount : 0;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -117,6 +137,7 @@ public class Confession {
                 ", content='" + content + '\'' +
                 ", author='" + author + '\'' +
                 ", likes=" + likes +
+                ", commentCount=" + commentCount +
                 ", createdAt=" + createdAt +
                 '}';
     }

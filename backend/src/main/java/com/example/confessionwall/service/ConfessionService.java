@@ -1,6 +1,9 @@
 package com.example.confessionwall.service;
 
+import com.example.confessionwall.dto.CommentRequest;
 import com.example.confessionwall.dto.ConfessionRequest;
+import com.example.confessionwall.dto.LikeResponse;
+import com.example.confessionwall.model.Comment;
 import com.example.confessionwall.model.Confession;
 
 import java.util.List;
@@ -29,4 +32,34 @@ public interface ConfessionService {
      * @return the updated confession entity
      */
     Confession likeConfession(Long id);
+
+    /**
+     * Toggle like for a confession by client IP.
+     * If the IP has not liked the confession, like count increases by 1.
+     * If the IP has already liked the confession, like count decreases by 1 (unlike).
+     *
+     * @param id the ID of the confession
+     * @param clientIp client IP address
+     * @return LikeResponse containing updated like count and current liked state
+     */
+    LikeResponse toggleLike(Long id, String clientIp);
+
+    /**
+     * Retrieve all comments for a confession ordered by creation timestamp ascending.
+     *
+     * @param confessionId the confession ID
+     * @return list of comments sorted chronologically ascending
+     */
+    List<Comment> getComments(Long confessionId);
+
+    /**
+     * Add a comment to a confession, increment the confession's comment count,
+     * and broadcast the new comment event after transaction commit.
+     *
+     * @param confessionId the confession ID
+     * @param request the comment creation request
+     * @return the saved comment entity
+     */
+    Comment addComment(Long confessionId, CommentRequest request);
 }
+

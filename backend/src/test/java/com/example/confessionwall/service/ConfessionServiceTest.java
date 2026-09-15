@@ -1,8 +1,14 @@
 package com.example.confessionwall.service;
 
+import com.example.confessionwall.dto.CommentRequest;
 import com.example.confessionwall.dto.ConfessionRequest;
+import com.example.confessionwall.dto.LikeResponse;
 import com.example.confessionwall.exception.ResourceNotFoundException;
+import com.example.confessionwall.model.Comment;
 import com.example.confessionwall.model.Confession;
+import com.example.confessionwall.model.ConfessionLike;
+import com.example.confessionwall.repository.CommentRepository;
+import com.example.confessionwall.repository.ConfessionLikeRepository;
 import com.example.confessionwall.repository.ConfessionRepository;
 import com.example.confessionwall.service.impl.ConfessionServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,8 +39,15 @@ class ConfessionServiceTest {
     @Mock
     private RealtimeService realtimeService;
 
+    @Mock
+    private ConfessionLikeRepository confessionLikeRepository;
+
+    @Mock
+    private CommentRepository commentRepository;
+
     @InjectMocks
     private ConfessionServiceImpl confessionService;
+
 
     private Confession sampleConfession1;
     private Confession sampleConfession2;
@@ -174,4 +187,208 @@ class ConfessionServiceTest {
         verify(confessionRepository, never()).findById(any());
         verify(realtimeService, never()).broadcastLikeUpdate(any(), any());
     }
+
+    @Test
+    @DisplayName("toggleLike when IP has not liked yet should increment likes and return liked=true")
+    void toggleLike_whenNotLikedYet_shouldIncrementLikes() {
+        when(confessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(sampleConfession1));
+        when(confessionLikeRepository.findByConfessionIdAndIpAddress(1L, "192.168.1.100")).thenReturn(Optional.empty());
+        when(confessionRepository.save(any(Confession.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LikeResponse response = confessionService.toggleLike(1L, "192.168.1.100");
+
+        assertThat(response).isNotNull();
+        assertThat(response.getId()).isEqualTo(1L);
+        assertThat(response.getLikes()).isEqualTo(4); // was 3 -> 4
+        assertThat(response.isLiked()).isTrue();
+
+        verify(confessionLikeRepository, times(1)).save(any(ConfessionLike.class));
+        verify(confessionLikeRepository, never()).deleteByConfessionIdAndIpAddress(any(), any());
+        verify(confessionRepository, times(1)).save(sampleConfession1);
+        verify(realtimeService, times(1)).broadcastLikeUpdate(1L, 4);
+    }
+
+    @Test
+    @DisplayName("toggleLike when IP already liked should decrement likes and return liked=false")
+    void toggleLike_whenAlreadyLiked_shouldDecrementLikes() {
+        ConfessionLike existingLike = new ConfessionLike(1L, "192.168.1.100");
+        when(confessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(sampleConfession1));
+        when(confessionLikeRepository.findByConfessionIdAndIpAddress(1L, "192.168.1.100")).thenReturn(Optional.of(existingLike));
+        when(confessionRepository.save(any(Confession.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LikeResponse response = confessionService.toggleLike(1L, "192.168.1.100");
+
+        assertThat(response).isNotNull();
+        assertThat(response.getId()).isEqualTo(1L);
+        assertThat(response.getLikes()).isEqualTo(2); // was 3 -> 2
+        assertThat(response.isLiked()).isFalse();
+
+        verify(confessionLikeRepository, times(1)).deleteByConfessionIdAndIpAddress(1L, "192.168.1.100");
+        verify(confessionLikeRepository, never()).save(any(ConfessionLike.class));
+        verify(confessionRepository, times(1)).save(sampleConfession1);
+        verify(realtimeService, times(1)).broadcastLikeUpdate(1L, 2);
+    }
+
+    @Test
+    @DisplayName("toggleLike when already liked and likes count is zero should not go below zero")
+    void toggleLike_whenLikesCountZero_shouldNotGoBelowZero() {
+        Confession zeroLikesConfession = new Confession(2L, "Zero likes", "Ẩn danh", 0, LocalDateTime.now());
+        ConfessionLike existingLike = new ConfessionLike(2L, "192.168.1.100");
+        when(confessionRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(zeroLikesConfession));
+        when(confessionLikeRepository.findByConfessionIdAndIpAddress(2L, "192.168.1.100")).thenReturn(Optional.of(existingLike));
+        when(confessionRepository.save(any(Confession.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LikeResponse response = confessionService.toggleLike(2L, "192.168.1.100");
+
+        assertThat(response).isNotNull();
+        assertThat(response.getLikes()).isEqualTo(0);
+        assertThat(response.isLiked()).isFalse();
+    }
+
+    @Test
+    @DisplayName("getComments should return comments ordered chronologically ascending")
+    void getComments_existingConfession_shouldReturnListOrderedAscending() {
+        Comment c1 = new Comment(1L, 1L, "Bình luận 1", "An", LocalDateTime.now().minusMinutes(5));
+        Comment c2 = new Comment(2L, 1L, "Bình luận 2", "Bình", LocalDateTime.now());
+
+        when(confessionRepository.existsById(1L)).thenReturn(true);
+        when(commentRepository.findByConfessionIdOrderByCreatedAtAsc(1L)).thenReturn(Arrays.asList(c1, c2));
+
+        List<Comment> comments = confessionService.getComments(1L);
+
+        assertThat(comments).hasSize(2);
+        assertThat(comments.get(0).getContent()).isEqualTo("Bình luận 1");
+        assertThat(comments.get(1).getContent()).isEqualTo("Bình luận 2");
+        verify(confessionRepository).existsById(1L);
+        verify(commentRepository).findByConfessionIdOrderByCreatedAtAsc(1L);
+    }
+
+    @Test
+    @DisplayName("getComments for non-existent confession should throw ResourceNotFoundException")
+    void getComments_nonExistentConfession_shouldThrowResourceNotFoundException() {
+        when(confessionRepository.existsById(999L)).thenReturn(false);
+
+        assertThatThrownBy(() -> confessionService.getComments(999L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Lời thú tội không tồn tại với ID: 999");
+
+        verify(commentRepository, never()).findByConfessionIdOrderByCreatedAtAsc(any());
+    }
+
+    @Test
+    @DisplayName("getComments with null ID should throw IllegalArgumentException")
+    void getComments_nullId_shouldThrowIllegalArgumentException() {
+        assertThatThrownBy(() -> confessionService.getComments(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID lời thú tội không được để trống");
+    }
+
+    @Test
+    @DisplayName("addComment should save comment, increment confession commentCount, and broadcast realtime event")
+    void addComment_validRequest_shouldSaveCommentAndIncrementCountAndBroadcast() {
+        when(confessionRepository.findById(1L)).thenReturn(Optional.of(sampleConfession1));
+        when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> {
+            Comment c = invocation.getArgument(0);
+            c.setId(101L);
+            return c;
+        });
+        when(confessionRepository.save(any(Confession.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CommentRequest request = new CommentRequest("Thật xúc động!", "Người bạn");
+        Comment savedComment = confessionService.addComment(1L, request);
+
+        assertThat(savedComment).isNotNull();
+        assertThat(savedComment.getId()).isEqualTo(101L);
+        assertThat(savedComment.getConfessionId()).isEqualTo(1L);
+        assertThat(savedComment.getContent()).isEqualTo("Thật xúc động!");
+        assertThat(savedComment.getAuthor()).isEqualTo("Người bạn");
+        assertThat(savedComment.getCreatedAt()).isNotNull();
+
+        assertThat(sampleConfession1.getCommentCount()).isEqualTo(1);
+        verify(commentRepository, times(1)).save(any(Comment.class));
+        verify(confessionRepository, times(1)).save(sampleConfession1);
+        verify(realtimeService, times(1)).broadcastNewComment(eq(1L), eq(savedComment), eq(1));
+    }
+
+    @Test
+    @DisplayName("addComment should prioritize findByIdForUpdate for pessimistic locking")
+    void addComment_whenFindByIdForUpdatePresent_shouldUsePessimisticLock() {
+        when(confessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(sampleConfession1));
+        when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(confessionRepository.save(any(Confession.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CommentRequest request = new CommentRequest("Khóa bi quan hoạt động tốt", "QA");
+        Comment savedComment = confessionService.addComment(1L, request);
+
+        assertThat(savedComment).isNotNull();
+        verify(confessionRepository).findByIdForUpdate(1L);
+        verify(realtimeService).broadcastNewComment(eq(1L), any(Comment.class), eq(1));
+    }
+
+    @Test
+    @DisplayName("addComment with null or blank author should default to 'Ẩn danh'")
+    void addComment_blankAuthor_shouldDefaultToAnonymous() {
+        when(confessionRepository.findById(1L)).thenReturn(Optional.of(sampleConfession1));
+        when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(confessionRepository.save(any(Confession.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CommentRequest requestNullAuthor = new CommentRequest("Nội dung hay", null);
+        Comment c1 = confessionService.addComment(1L, requestNullAuthor);
+        assertThat(c1.getAuthor()).isEqualTo("Ẩn danh");
+
+        CommentRequest requestBlankAuthor = new CommentRequest("Nội dung hay 2", "   ");
+        Comment c2 = confessionService.addComment(1L, requestBlankAuthor);
+        assertThat(c2.getAuthor()).isEqualTo("Ẩn danh");
+    }
+
+    @Test
+    @DisplayName("addComment with blank or null content should throw IllegalArgumentException")
+    void addComment_blankOrNullContent_shouldThrowIllegalArgumentException() {
+        when(confessionRepository.findById(1L)).thenReturn(Optional.of(sampleConfession1));
+
+        assertThatThrownBy(() -> confessionService.addComment(1L, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Yêu cầu không được để trống");
+
+        assertThatThrownBy(() -> confessionService.addComment(1L, new CommentRequest(null, "Tác giả")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Nội dung bình luận không được để trống");
+
+        assertThatThrownBy(() -> confessionService.addComment(1L, new CommentRequest("   ", "Tác giả")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Nội dung bình luận không được để trống");
+
+        assertThatThrownBy(() -> confessionService.addComment(1L, new CommentRequest("C".repeat(501), "Tác giả")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Nội dung bình luận không được vượt quá 500 ký tự");
+
+        assertThatThrownBy(() -> confessionService.addComment(1L, new CommentRequest("Hợp lệ", "D".repeat(51))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Tên tác giả không được vượt quá 50 ký tự");
+
+        verify(commentRepository, never()).save(any());
+        verify(realtimeService, never()).broadcastNewComment(any(), any());
+    }
+
+    @Test
+    @DisplayName("addComment with non-existent confession should throw ResourceNotFoundException")
+    void addComment_nonExistentConfession_shouldThrowResourceNotFoundException() {
+        when(confessionRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> confessionService.addComment(999L, new CommentRequest("Hợp lệ", "Tác giả")))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Lời thú tội không tồn tại với ID: 999");
+
+        verify(commentRepository, never()).save(any());
+        verify(realtimeService, never()).broadcastNewComment(any(), any());
+    }
+
+    @Test
+    @DisplayName("addComment with null ID should throw IllegalArgumentException")
+    void addComment_nullId_shouldThrowIllegalArgumentException() {
+        assertThatThrownBy(() -> confessionService.addComment(null, new CommentRequest("Hợp lệ", "Tác giả")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID lời thú tội không được để trống");
+    }
 }
+

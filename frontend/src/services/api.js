@@ -113,6 +113,30 @@ export const likeConfession = async (id) => {
 };
 
 /**
+ * Fetch all comments for a confession ordered chronologically
+ * @param {number|string} confessionId
+ * @returns {Promise<Array>} List of comment entities
+ */
+export const getComments = async (confessionId) => {
+  const response = await api.get(`/confessions/${confessionId}/comments`);
+  return response.data;
+};
+
+/**
+ * Create a new comment for a confession
+ * @param {number|string} confessionId
+ * @param {Object} data { content: string, author?: string }
+ * @returns {Promise<Object>} Created comment entity
+ */
+export const createComment = async (confessionId, data) => {
+  const response = await api.post(`/confessions/${confessionId}/comments`, {
+    content: data.content,
+    author: data.author?.trim() || undefined,
+  });
+  return response.data;
+};
+
+/**
  * Get the Server-Sent Events realtime stream endpoint URL
  * @returns {string} Realtime endpoint URL
  */

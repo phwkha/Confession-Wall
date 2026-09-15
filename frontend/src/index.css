@@ -57,3 +57,17 @@
 .animate-confession-appear {
   animation: confessionAppear 0.4s ease-out;
 }
+
+/* Fade-in animation for alert messages and banners */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
+}

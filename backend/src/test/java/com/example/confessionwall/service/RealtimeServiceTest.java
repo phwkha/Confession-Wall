@@ -1,5 +1,6 @@
 package com.example.confessionwall.service;
 
+import com.example.confessionwall.model.Comment;
 import com.example.confessionwall.model.Confession;
 import com.example.confessionwall.service.impl.RealtimeServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,17 @@ class RealtimeServiceTest {
     }
 
     @Test
+    @DisplayName("broadcastNewComment with null values is safe")
+    void broadcastNewComment_null_safe() {
+        realtimeService.broadcastNewComment(null, new Comment(1L, "Test", "Author"));
+        realtimeService.broadcastNewComment(1L, null);
+        realtimeService.broadcastNewComment(null);
+        realtimeService.broadcastNewComment(null, new Comment(1L, "Test", "Author"), 1);
+        realtimeService.broadcastNewComment(1L, null, 1);
+        assertThat(realtimeService.getActiveSubscribersCount()).isEqualTo(0);
+    }
+
+    @Test
     @DisplayName("sendHeartbeat on empty list is safe")
     void sendHeartbeat_empty_safe() {
         realtimeService.sendHeartbeat();
@@ -66,6 +78,16 @@ class RealtimeServiceTest {
     void broadcastLikeUpdate_activeSubscriber() throws Exception {
         realtimeService.subscribe();
         realtimeService.broadcastLikeUpdate(1L, 5);
+        Thread.sleep(100);
+        assertThat(realtimeService.getActiveSubscribersCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("broadcastNewComment to active emitter succeeds")
+    void broadcastNewComment_activeSubscriber() throws Exception {
+        realtimeService.subscribe();
+        Comment comment = new Comment(10L, 1L, "Bình luận mới", "Lan", LocalDateTime.now());
+        realtimeService.broadcastNewComment(1L, comment, 3);
         Thread.sleep(100);
         assertThat(realtimeService.getActiveSubscribersCount()).isEqualTo(1);
     }

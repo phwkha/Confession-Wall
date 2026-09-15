@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, Clock, User, AlertTriangle } from 'lucide-react';
+import { Heart, Clock, User, AlertTriangle, MessageSquare } from 'lucide-react';
 import { likeConfession } from '../services/api';
 
 /**
@@ -46,16 +46,46 @@ function formatVietnameseTime(dateString) {
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
-export default function ConfessionCard({ confession, onLikeUpdate }) {
+function getStoredLikedState(id) {
+  try {
+    const saved = localStorage.getItem('liked_confessions');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) && parsed.includes(id);
+    }
+  } catch {
+    // Ignore storage parse errors
+  }
+  return false;
+}
+
+function setStoredLikedState(id, liked) {
+  try {
+    const saved = localStorage.getItem('liked_confessions');
+    let list = saved ? JSON.parse(saved) : [];
+    if (!Array.isArray(list)) list = [];
+    if (liked) {
+      if (!list.includes(id)) list.push(id);
+    } else {
+      list = list.filter((item) => item !== id);
+    }
+    localStorage.setItem('liked_confessions', JSON.stringify(list));
+  } catch {
+    // Ignore storage write errors
+  }
+}
+
+export default function ConfessionCard({ confession, onLikeUpdate, onOpenComments }) {
   const [likes, setLikes] = useState(confession.likes || 0);
   const [isLiking, setIsLiking] = useState(false);
-  const [hasLiked, setHasLiked] = useState(false);
+  const [hasLiked, setHasLiked] = useState(() => getStoredLikedState(confession.id));
   const [animateHeart, setAnimateHeart] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
   const [tiltStyle, setTiltStyle] = useState({
     transform: 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale3d(1, 1, 1)',
     boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(168, 85, 247, 0.15)',
   });
+
   const [glareStyle, setGlareStyle] = useState({
     opacity: 0,
   });
@@ -113,47 +143,51 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
     });
   };
 
-  const handleLike = async () => {
+  const handleLike = async (e) => {
+    if (e) e.stopPropagation();
     const now = Date.now();
-    if (now - lastLikeTimestamp.current < 1500) {
-      setWarningMessage('Thả tim hơi nhanh rồi, chậm lại xíu nhé!');
-      setTimeout(() => setWarningMessage(''), 2500);
+    if (now - lastLikeTimestamp.current < 400) {
       return;
     }
     if (isLiking) return;
     lastLikeTimestamp.current = now;
 
-    // Optimistic UI update
     const previousLikes = likes;
-    const nextLikes = previousLikes + 1;
+    const previousHasLiked = hasLiked;
+    const nextHasLiked = !previousHasLiked;
+    const nextLikes = nextHasLiked ? previousLikes + 1 : Math.max(0, previousLikes - 1);
 
+    // Optimistic UI update
     setLikes(nextLikes);
-    setHasLiked(true);
-    setAnimateHeart(true);
+    setHasLiked(nextHasLiked);
+    if (nextHasLiked) {
+      setAnimateHeart(true);
+      setTimeout(() => setAnimateHeart(false), 800);
+    }
     setIsLiking(true);
 
-    setTimeout(() => {
-      setAnimateHeart(false);
-    }, 800);
-
     try {
-      const updatedEntity = await likeConfession(confession.id);
-      if (updatedEntity && typeof updatedEntity.likes === 'number') {
-        setLikes(updatedEntity.likes);
+      const response = await likeConfession(confession.id);
+      if (response && typeof response.likes === 'number') {
+        setLikes(response.likes);
+        const actualLiked = typeof response.liked === 'boolean' ? response.liked : nextHasLiked;
+        setHasLiked(actualLiked);
+        setStoredLikedState(confession.id, actualLiked);
         if (onLikeUpdate) {
-          onLikeUpdate(confession.id, updatedEntity.likes);
+          onLikeUpdate(confession.id, response.likes);
         }
       }
     } catch (err) {
-      console.error(`Lỗi khi thả tim cho confession #${confession.id}:`, err);
+      console.error(`Lỗi khi cập nhật lượt thích cho confession #${confession.id}:`, err);
       // Rollback on failure
       setLikes(previousLikes);
-      setHasLiked(false);
+      setHasLiked(previousHasLiked);
+      setStoredLikedState(confession.id, previousHasLiked);
       const msg =
         err.friendlyMessage ||
         (err.response?.status === 429
           ? 'Bạn đang thao tác quá nhanh, vui lòng thử lại sau.'
-          : 'Không thể thả tim. Vui lòng thử lại sau.');
+          : 'Không thể cập nhật lượt thích. Vui lòng thử lại sau.');
       setWarningMessage(msg);
       setTimeout(() => setWarningMessage(''), 3000);
     } finally {
@@ -168,6 +202,7 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
     <div className="[perspective:1200px] h-full">
       <article
         ref={cardRef}
+        onClick={() => onOpenComments && onOpenComments(confession)}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={tiltStyle}
@@ -228,7 +263,7 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
 
             <span
               style={{ transform: 'translateZ(12px)' }}
-              className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-850 border border-slate-800 text-slate-400 group-hover:text-purple-300 group-hover:border-purple-800/60 transition-colors shadow-sm"
+              className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-800 text-slate-400 group-hover:text-purple-300 group-hover:border-purple-800/60 transition-colors shadow-sm"
             >
               #{confession.id}
             </span>
@@ -243,43 +278,62 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
           {confession.content}
         </div>
 
-        {/* 3D Floating Layer 3: Card Actions & Like Button (Highest elevation) */}
+        {/* 3D Floating Layer 3: Card Actions: Like Button & Comment Button */}
         <div
           style={{ transform: 'translateZ(36px)', transformStyle: 'preserve-3d' }}
           className="pt-3 mt-3 border-t border-slate-800/80 flex items-center justify-between relative z-20 transition-transform duration-100"
         >
-          <button
-            type="button"
-            onClick={handleLike}
-            disabled={isLiking}
-            aria-label={`Thả tim cho lời thú tội #${confession.id}, hiện có ${likes} tim`}
-            style={{ transform: 'translateZ(8px)' }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 shadow-md ${
-              hasLiked
-                ? 'bg-purple-900/90 text-purple-100 border border-purple-500/80 shadow-[0_0_16px_rgba(168,85,247,0.5)]'
-                : 'bg-slate-800/90 text-slate-300 hover:bg-purple-950/70 hover:text-purple-100 border border-slate-700/80 hover:border-purple-600/70 hover:shadow-[0_0_12px_rgba(168,85,247,0.25)]'
-            }`}
-          >
-            <Heart
-              className={`w-3.5 h-3.5 transition-transform ${
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleLike}
+              disabled={isLiking}
+              aria-label={`Thả tim cho lời thú tội #${confession.id}, hiện có ${likes} tim`}
+              style={{ transform: 'translateZ(8px)' }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 shadow-md ${
                 hasLiked
-                  ? 'fill-purple-400 text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.95)]'
-                  : 'text-slate-400 group-hover:text-purple-400'
-              } ${animateHeart ? 'scale-125 text-purple-400 fill-purple-400 animate-pulse' : ''}`}
-            />
-            <span>💜 Thả tim</span>
-            <span
-              className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
-                hasLiked ? 'bg-purple-950 text-purple-200' : 'bg-slate-700 text-slate-200'
+                  ? 'bg-purple-900/90 text-purple-100 border border-purple-500/80 shadow-[0_0_16px_rgba(168,85,247,0.5)]'
+                  : 'bg-slate-800/90 text-slate-300 hover:bg-purple-950/70 hover:text-purple-100 border border-slate-700/80 hover:border-purple-600/70 hover:shadow-[0_0_12px_rgba(168,85,247,0.25)]'
               }`}
             >
-              {likes}
-            </span>
-          </button>
+              <Heart
+                className={`w-3.5 h-3.5 transition-transform ${
+                  hasLiked
+                    ? 'fill-purple-400 text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.95)]'
+                    : 'text-slate-400 group-hover:text-purple-400'
+                } ${animateHeart ? 'scale-125 text-purple-400 fill-purple-400 animate-pulse' : ''}`}
+              />
+              <span>{hasLiked ? '💜 Đã thích' : '💜 Thả tim'}</span>
+              <span
+                className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
+                  hasLiked ? 'bg-purple-950 text-purple-200' : 'bg-slate-700 text-slate-200'
+                }`}
+              >
+                {likes}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenComments) onOpenComments(confession);
+              }}
+              aria-label={`Xem bình luận cho lời thú tội #${confession.id}, hiện có ${confession.commentCount || 0} bình luận`}
+              style={{ transform: 'translateZ(8px)' }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 shadow-md bg-slate-800/90 text-slate-300 hover:bg-purple-950/70 hover:text-purple-100 border border-slate-700/80 hover:border-purple-600/70 hover:shadow-[0_0_12px_rgba(168,85,247,0.25)]"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-400" />
+              <span>Bình luận</span>
+              <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[11px] font-bold bg-slate-700 text-slate-200">
+                {confession.commentCount || 0}
+              </span>
+            </button>
+          </div>
 
           <span
             style={{ transform: 'translateZ(5px)' }}
-            className="text-[11px] text-slate-500 italic"
+            className="text-[11px] text-slate-500 italic hidden sm:inline"
           >
             Lời thú tội
           </span>

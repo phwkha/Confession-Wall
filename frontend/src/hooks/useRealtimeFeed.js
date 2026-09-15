@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getRealtimeStreamUrl } from '../services/api';
 
-export function useRealtimeFeed({ onNewConfession, onLikeUpdate, onReconnect } = {}) {
+export function useRealtimeFeed({ onNewConfession, onLikeUpdate, onNewComment, onReconnect } = {}) {
   const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connecting' | 'connected' | 'reconnecting' | 'disconnected'
   const [retryCount, setRetryCount] = useState(0);
 
@@ -17,9 +17,9 @@ export function useRealtimeFeed({ onNewConfession, onLikeUpdate, onReconnect } =
   }, [connectionStatus]);
 
   // Store latest callbacks in ref to prevent reconnect loops on parent re-renders
-  const callbacksRef = useRef({ onNewConfession, onLikeUpdate, onReconnect });
+  const callbacksRef = useRef({ onNewConfession, onLikeUpdate, onNewComment, onReconnect });
   useEffect(() => {
-    callbacksRef.current = { onNewConfession, onLikeUpdate, onReconnect };
+    callbacksRef.current = { onNewConfession, onLikeUpdate, onNewComment, onReconnect };
   });
 
   const connect = useCallback(() => {
@@ -72,6 +72,17 @@ export function useRealtimeFeed({ onNewConfession, onLikeUpdate, onReconnect } =
         }
       } catch (e) {
         console.error('Failed to parse LIKE_UPDATE event:', e);
+      }
+    });
+
+    es.addEventListener('NEW_COMMENT', (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (callbacksRef.current.onNewComment) {
+          callbacksRef.current.onNewComment(payload);
+        }
+      } catch (e) {
+        console.error('Failed to parse NEW_COMMENT event:', e);
       }
     });
 

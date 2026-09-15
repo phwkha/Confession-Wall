@@ -1,6 +1,8 @@
 package com.example.confessionwall.service.impl;
 
+import com.example.confessionwall.dto.CommentEvent;
 import com.example.confessionwall.dto.LikeUpdateEvent;
+import com.example.confessionwall.model.Comment;
 import com.example.confessionwall.model.Confession;
 import com.example.confessionwall.service.RealtimeService;
 import org.slf4j.Logger;
@@ -90,6 +92,34 @@ public class RealtimeServiceImpl implements RealtimeService {
                     synchronized (emitter) {
                         emitter.send(SseEmitter.event()
                                 .name("LIKE_UPDATE")
+                                .data(event));
+                    }
+                } catch (Exception e) {
+                    deadEmitters.add(emitter);
+                }
+            }
+            if (!deadEmitters.isEmpty()) {
+                emitters.removeAll(deadEmitters);
+            }
+        });
+    }
+
+    @Override
+    public void broadcastNewComment(Long confessionId, Comment comment) {
+        broadcastNewComment(confessionId, comment, null);
+    }
+
+    @Override
+    public void broadcastNewComment(Long confessionId, Comment comment, Integer commentCount) {
+        if (confessionId == null || comment == null || emitters.isEmpty()) return;
+        CommentEvent event = new CommentEvent(confessionId, comment, commentCount);
+        CompletableFuture.runAsync(() -> {
+            List<SseEmitter> deadEmitters = new ArrayList<>();
+            for (SseEmitter emitter : emitters) {
+                try {
+                    synchronized (emitter) {
+                        emitter.send(SseEmitter.event()
+                                .name("NEW_COMMENT")
                                 .data(event));
                     }
                 } catch (Exception e) {

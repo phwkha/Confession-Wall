@@ -1,8 +1,10 @@
 package com.example.confessionwall.controller;
 
+import com.example.confessionwall.dto.CommentRequest;
 import com.example.confessionwall.dto.ConfessionRequest;
 import com.example.confessionwall.exception.GlobalExceptionHandler;
 import com.example.confessionwall.exception.ResourceNotFoundException;
+import com.example.confessionwall.model.Comment;
 import com.example.confessionwall.model.Confession;
 import com.example.confessionwall.service.ConfessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -166,6 +168,132 @@ class ConfessionControllerTest {
 
         mockMvc.perform(put("/api/confessions/999/like")
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is(404)))
+                .andExpect(jsonPath("$.error", is("Not Found")))
+                .andExpect(jsonPath("$.message", is("Lời thú tội không tồn tại với ID: 999")));
+    }
+
+    @Test
+    @DisplayName("GET /api/confessions/{id}/comments should return 200 OK and comments ordered ascending")
+    void getComments_existingConfession_shouldReturn200OkWithCommentsList() throws Exception {
+        Comment comment1 = new Comment(1L, 1L, "Bình luận đầu tiên", "An", LocalDateTime.now().minusMinutes(10));
+        Comment comment2 = new Comment(2L, 1L, "Bình luận thứ hai", "Bình", LocalDateTime.now().minusMinutes(5));
+        when(confessionService.getComments(1L)).thenReturn(Arrays.asList(comment1, comment2));
+
+        mockMvc.perform(get("/api/confessions/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id", is(1)))
+                .andExpect(jsonPath("$[0].confessionId", is(1)))
+                .andExpect(jsonPath("$[0].content", is("Bình luận đầu tiên")))
+                .andExpect(jsonPath("$[0].author", is("An")))
+                .andExpect(jsonPath("$[1].id", is(2)))
+                .andExpect(jsonPath("$[1].content", is("Bình luận thứ hai")));
+    }
+
+    @Test
+    @DisplayName("GET /api/confessions/{id}/comments with non-existent ID should return 404 Not Found")
+    void getComments_nonExistentConfession_shouldReturn404NotFound() throws Exception {
+        when(confessionService.getComments(999L))
+                .thenThrow(new ResourceNotFoundException("Lời thú tội không tồn tại với ID: 999"));
+
+        mockMvc.perform(get("/api/confessions/999/comments")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is(404)))
+                .andExpect(jsonPath("$.error", is("Not Found")))
+                .andExpect(jsonPath("$.message", is("Lời thú tội không tồn tại với ID: 999")));
+    }
+
+    @Test
+    @DisplayName("POST /api/confessions/{id}/comments with valid request should return 201 Created and persisted comment")
+    void addComment_validRequest_shouldReturn201Created() throws Exception {
+        CommentRequest request = new CommentRequest("Đồng cảm với bạn!", "Bạn tốt");
+        Comment savedComment = new Comment(10L, 1L, request.getContent(), request.getAuthor(), LocalDateTime.now());
+
+        when(confessionService.addComment(eq(1L), any(CommentRequest.class))).thenReturn(savedComment);
+
+        mockMvc.perform(post("/api/confessions/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(10)))
+                .andExpect(jsonPath("$.confessionId", is(1)))
+                .andExpect(jsonPath("$.content", is("Đồng cảm với bạn!")))
+                .andExpect(jsonPath("$.author", is("Bạn tốt")))
+                .andExpect(jsonPath("$.createdAt", notNullValue()));
+    }
+
+    @Test
+    @DisplayName("POST /api/confessions/{id}/comments with blank content should return 400 Bad Request")
+    void addComment_blankContent_shouldReturn400BadRequest() throws Exception {
+        CommentRequest blankRequest = new CommentRequest("   ", "Ẩn danh");
+
+        mockMvc.perform(post("/api/confessions/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(blankRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)))
+                .andExpect(jsonPath("$.error", is("Bad Request")))
+                .andExpect(jsonPath("$.message", containsString("Nội dung bình luận không được để trống")));
+    }
+
+    @Test
+    @DisplayName("POST /api/confessions/{id}/comments with null content should return 400 Bad Request")
+    void addComment_nullContent_shouldReturn400BadRequest() throws Exception {
+        String invalidJson = "{\"author\":\"Ẩn danh\"}";
+
+        mockMvc.perform(post("/api/confessions/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)))
+                .andExpect(jsonPath("$.error", is("Bad Request")))
+                .andExpect(jsonPath("$.message", containsString("Nội dung bình luận không được để trống")));
+    }
+
+    @Test
+    @DisplayName("POST /api/confessions/{id}/comments with content exceeding 500 chars should return 400 Bad Request")
+    void addComment_oversizedContent_shouldReturn400BadRequest() throws Exception {
+        String longContent = "C".repeat(501);
+        CommentRequest oversizedRequest = new CommentRequest(longContent, "Ẩn danh");
+
+        mockMvc.perform(post("/api/confessions/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(oversizedRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)))
+                .andExpect(jsonPath("$.error", is("Bad Request")))
+                .andExpect(jsonPath("$.message", containsString("Nội dung bình luận không được vượt quá 500 ký tự")));
+    }
+
+    @Test
+    @DisplayName("POST /api/confessions/{id}/comments with author exceeding 50 chars should return 400 Bad Request")
+    void addComment_oversizedAuthor_shouldReturn400BadRequest() throws Exception {
+        String longAuthor = "D".repeat(51);
+        CommentRequest oversizedRequest = new CommentRequest("Nội dung hợp lệ", longAuthor);
+
+        mockMvc.perform(post("/api/confessions/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(oversizedRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)))
+                .andExpect(jsonPath("$.error", is("Bad Request")))
+                .andExpect(jsonPath("$.message", containsString("Tên tác giả không được vượt quá 50 ký tự")));
+    }
+
+    @Test
+    @DisplayName("POST /api/confessions/{id}/comments with non-existent ID should return 404 Not Found")
+    void addComment_nonExistentConfession_shouldReturn404NotFound() throws Exception {
+        CommentRequest request = new CommentRequest("Bình luận bài không tồn tại", "Ẩn danh");
+        when(confessionService.addComment(eq(999L), any(CommentRequest.class)))
+                .thenThrow(new ResourceNotFoundException("Lời thú tội không tồn tại với ID: 999"));
+
+        mockMvc.perform(post("/api/confessions/999/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status", is(404)))
                 .andExpect(jsonPath("$.error", is("Not Found")))

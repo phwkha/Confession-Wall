@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Header from './components/Header';
 import ConfessionForm from './components/ConfessionForm';
 import ConfessionList from './components/ConfessionList';
+import CommentModal from './components/CommentModal';
 import Ambient3DBackground from './components/3d/Ambient3DBackground';
 import CustomCursor from './components/3d/CustomCursor';
 import { getConfessions } from './services/api';
@@ -12,6 +13,8 @@ export default function App() {
   const [confessions, setConfessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [activeConfession, setActiveConfession] = useState(null);
+  const [realtimeComment, setRealtimeComment] = useState(null);
 
   const fetchConfessionsData = useCallback(async () => {
     setIsLoading(true);
@@ -58,6 +61,89 @@ export default function App() {
     );
   }, []);
 
+  const processedCommentIdsRef = useRef(new Set());
+  const locallySubmittedCommentIdsRef = useRef(new Set());
+  const activeConfessionRef = useRef(activeConfession);
+
+  useEffect(() => {
+    activeConfessionRef.current = activeConfession;
+  }, [activeConfession]);
+
+  // Realtime comment update handler (for SSE stream)
+  const handleNewComment = useCallback((payload) => {
+    if (!payload) return;
+    const comment = payload.comment || (payload.id ? payload : null);
+    const confessionId = payload.confessionId || comment?.confessionId;
+
+    if (!confessionId) return;
+
+    const commentId = comment?.id || payload.id;
+    if (commentId) {
+      processedCommentIdsRef.current.add(commentId);
+    }
+    const isLocal = commentId && locallySubmittedCommentIdsRef.current.has(commentId);
+
+    // Update comment count in confessions list
+    setConfessions((prev) =>
+      prev.map((item) => {
+        if (item.id !== confessionId) return item;
+        if (payload.commentCount != null) {
+          return { ...item, commentCount: payload.commentCount };
+        }
+        return isLocal ? item : { ...item, commentCount: (item.commentCount || 0) + 1 };
+      })
+    );
+
+    // Update active confession if open
+    setActiveConfession((prev) => {
+      if (prev && prev.id === confessionId) {
+        if (payload.commentCount != null) {
+          return { ...prev, commentCount: payload.commentCount };
+        }
+        return isLocal ? prev : { ...prev, commentCount: (prev.commentCount || 0) + 1 };
+      }
+      return prev;
+    });
+
+    // Forward to open modal only if modal is currently open for this confession
+    if (activeConfessionRef.current && activeConfessionRef.current.id === confessionId) {
+      setRealtimeComment(payload);
+    }
+  }, []);
+
+  // Modal comment created handler
+  const handleCommentAdded = useCallback((confessionId, newComment) => {
+    if (newComment?.id) {
+      locallySubmittedCommentIdsRef.current.add(newComment.id);
+    }
+    if (newComment?.id && processedCommentIdsRef.current.has(newComment.id)) {
+      return;
+    }
+    setConfessions((prev) =>
+      prev.map((item) =>
+        item.id === confessionId
+          ? { ...item, commentCount: (item.commentCount || 0) + 1 }
+          : item
+      )
+    );
+    setActiveConfession((prev) => {
+      if (prev && prev.id === confessionId) {
+        return { ...prev, commentCount: (prev.commentCount || 0) + 1 };
+      }
+      return prev;
+    });
+  }, []);
+
+  // Open / close comments modal
+  const handleOpenComments = useCallback((confession) => {
+    setActiveConfession(confession);
+  }, []);
+
+  const handleCloseComments = useCallback(() => {
+    setActiveConfession(null);
+    setRealtimeComment(null);
+  }, []);
+
   // Reconnection reconciliation handler
   const handleRealtimeReconnect = useCallback(() => {
     fetchConfessionsData();
@@ -66,6 +152,7 @@ export default function App() {
   const { connectionStatus } = useRealtimeFeed({
     onNewConfession: handleNewConfession,
     onLikeUpdate: handleLikeUpdate,
+    onNewComment: handleNewComment,
     onReconnect: handleRealtimeReconnect,
   });
 
@@ -116,9 +203,18 @@ export default function App() {
             confessions={confessions}
             isLoading={isLoading}
             onLikeUpdate={handleLikeUpdate}
+            onOpenComments={handleOpenComments}
           />
         </section>
       </main>
+
+      <CommentModal
+        confession={activeConfession}
+        isOpen={activeConfession !== null}
+        onClose={handleCloseComments}
+        onCommentAdded={handleCommentAdded}
+        realtimeComment={realtimeComment}
+      />
 
       <footer className="bg-slate-950/80 backdrop-blur-sm border-t border-slate-900 py-6 text-center text-xs text-slate-500 mt-auto relative z-10">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
