@@ -220,7 +220,7 @@ export default function ConfessionCard({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={tiltStyle}
-        className="group bg-slate-900/85 backdrop-blur-md rounded-2xl p-5 border border-slate-800/90 hover:border-purple-500/70 transition-colors duration-200 flex flex-col justify-between relative will-change-transform [transform-style:preserve-3d] animate-confession-appear h-full select-none"
+        className="group bg-slate-900/85 backdrop-blur-md rounded-2xl p-5 border border-slate-800/90 hover:border-purple-500/70 transition-colors duration-200 flex flex-col justify-between relative will-change-transform animate-confession-appear h-full"
       >
         {/* Background rounded container for border glow and dynamic specular glare */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
@@ -237,26 +237,18 @@ export default function ConfessionCard({
         {/* Anti-spam warning banner */}
         {warningMessage && (
           <div
-            style={{ transform: "translateZ(30px)" }}
-            className="mb-2 p-2 rounded-xl bg-amber-950/80 border border-amber-600/60 text-amber-200 text-xs flex items-center gap-1.5 animate-fadeIn z-30"
+            className="mb-2 p-2 rounded-xl bg-amber-950/80 border border-amber-600/60 text-amber-200 text-xs flex items-center gap-1.5 animate-fadeIn relative z-30"
           >
             <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
             <span className="font-medium">{warningMessage}</span>
           </div>
         )}
 
-        {/* 3D Floating Layer 1: Header (Author & Timestamp) */}
-        <div
-          style={{
-            transform: "translateZ(28px)",
-            transformStyle: "preserve-3d",
-          }}
-          className="relative z-10 transition-transform duration-100"
-        >
+        {/* Header (Author & Timestamp) */}
+        <div className="relative z-10">
           <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-800/80">
             <div className="flex items-center gap-2.5 min-w-0">
               <div
-                style={{ transform: "translateZ(10px)" }}
                 className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold shadow-md ${
                   isAnonymous
                     ? "bg-slate-800 text-slate-400 border border-slate-700/80"
@@ -279,44 +271,36 @@ export default function ConfessionCard({
             </div>
 
             <span
-              style={{ transform: "translateZ(12px)" }}
               className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-800 text-slate-400 group-hover:text-purple-300 group-hover:border-purple-800/60 transition-colors shadow-sm"
             >
               #{confession.id}
             </span>
           </div>
           <span
-            style={{ transform: "translateZ(5px)" }}
             className="text-[11px] text-slate-500 italic hidden sm:inline"
           >
             Lời thú tội
           </span>
         </div>
 
-        {/* 3D Floating Layer 2: Confession Message Content */}
+        {/* Confession Message Content */}
         <div
-          style={{ transform: "translateZ(18px)" }}
-          className="text-slate-300 text-sm leading-relaxed whitespace-pre-line break-words my-3 font-normal selection:bg-purple-950 selection:text-purple-300 flex-1 relative z-10 transition-transform duration-100"
+          className="text-slate-300 text-sm leading-relaxed whitespace-pre-line break-words my-3 font-normal selection:bg-purple-950 selection:text-purple-300 flex-1 relative z-10"
         >
           {confession.content}
         </div>
 
-        {/* 3D Floating Layer 3: Card Actions: Like Button & Comment Button */}
+        {/* Card Actions: Like Button & Comment Button */}
         <div
-          style={{
-            transform: "translateZ(36px)",
-            transformStyle: "preserve-3d",
-          }}
-          className="pt-3 mt-3 border-t border-slate-800/80 flex items-center justify-between relative z-20 transition-transform duration-100"
+          className="pt-3 mt-3 border-t border-slate-800/80 flex items-center justify-between relative z-30"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative z-30">
             <button
               type="button"
               onClick={handleLike}
               disabled={isLiking}
               aria-label={`Thả tim cho lời thú tội #${confession.id}, hiện có ${likes} tim`}
-              style={{ transform: "translateZ(8px)" }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 shadow-md ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 shadow-md relative z-30 cursor-pointer ${
                 hasLiked
                   ? "bg-purple-900/90 text-purple-100 border border-purple-500/80 shadow-[0_0_16px_rgba(168,85,247,0.5)]"
                   : "bg-slate-800/90 text-slate-300 hover:bg-purple-950/70 hover:text-purple-100 border border-slate-700/80 hover:border-purple-600/70 hover:shadow-[0_0_12px_rgba(168,85,247,0.25)]"
@@ -345,8 +329,7 @@ export default function ConfessionCard({
               type="button"
               onClick={() => onOpenComments?.(confession)}
               aria-label={`Xem bình luận cho lời thú tội #${confession.id}, hiện có ${confession.commentCount || 0} bình luận`}
-              style={{ transform: "translateZ(8px)" }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 shadow-md bg-slate-800/90 text-slate-300 hover:bg-purple-950/70 hover:text-purple-100 border border-slate-700/80 hover:border-purple-600/70 hover:shadow-[0_0_12px_rgba(168,85,247,0.25)]"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 shadow-md bg-slate-800/90 text-slate-300 hover:bg-purple-950/70 hover:text-purple-100 border border-slate-700/80 hover:border-purple-600/70 hover:shadow-[0_0_12px_rgba(168,85,247,0.25)] relative z-30 cursor-pointer"
             >
               <MessageSquare className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-400" />
               <span>Bình luận</span>
