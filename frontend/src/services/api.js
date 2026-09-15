@@ -13,6 +13,19 @@ const api = axios.create({
   timeout: 10000,
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 429) {
+      const customMessage =
+        error.response.data?.message ||
+        'Bạn đang thao tác quá nhanh, vui lòng thử lại sau.';
+      error.friendlyMessage = customMessage;
+    }
+    return Promise.reject(error);
+  }
+);
+
 /**
  * Fetch all confessions ordered newest first
  * @returns {Promise<Array>} List of confession entities

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, Clock, User } from 'lucide-react';
+import { Heart, Clock, User, AlertTriangle } from 'lucide-react';
 import { likeConfession } from '../services/api';
 
 /**
@@ -51,6 +51,7 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
   const [isLiking, setIsLiking] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
   const [animateHeart, setAnimateHeart] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
   const [tiltStyle, setTiltStyle] = useState({
     transform: 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale3d(1, 1, 1)',
     boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(168, 85, 247, 0.15)',
@@ -59,6 +60,7 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
     opacity: 0,
   });
   const cardRef = useRef(null);
+  const lastLikeTimestamp = useRef(0);
 
   useEffect(() => {
     if (typeof confession.likes === 'number') {
@@ -112,7 +114,14 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
   };
 
   const handleLike = async () => {
+    const now = Date.now();
+    if (now - lastLikeTimestamp.current < 1500) {
+      setWarningMessage('Thả tim hơi nhanh rồi, chậm lại xíu nhé!');
+      setTimeout(() => setWarningMessage(''), 2500);
+      return;
+    }
     if (isLiking) return;
+    lastLikeTimestamp.current = now;
 
     // Optimistic UI update
     const previousLikes = likes;
@@ -140,6 +149,13 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
       // Rollback on failure
       setLikes(previousLikes);
       setHasLiked(false);
+      const msg =
+        err.friendlyMessage ||
+        (err.response?.status === 429
+          ? 'Bạn đang thao tác quá nhanh, vui lòng thử lại sau.'
+          : 'Không thể thả tim. Vui lòng thử lại sau.');
+      setWarningMessage(msg);
+      setTimeout(() => setWarningMessage(''), 3000);
     } finally {
       setIsLiking(false);
     }
@@ -168,6 +184,17 @@ export default function ConfessionCard({ confession, onLikeUpdate }) {
             className="absolute inset-0 pointer-events-none"
           />
         </div>
+
+        {/* Anti-spam warning banner */}
+        {warningMessage && (
+          <div
+            style={{ transform: 'translateZ(30px)' }}
+            className="mb-2 p-2 rounded-xl bg-amber-950/80 border border-amber-600/60 text-amber-200 text-xs flex items-center gap-1.5 animate-fadeIn z-30"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+            <span className="font-medium">{warningMessage}</span>
+          </div>
+        )}
 
         {/* 3D Floating Layer 1: Header (Author & Timestamp) */}
         <div

@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
-import { Send, User, MessageSquare, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, User, MessageSquare, AlertCircle, CheckCircle2, Loader2, Clock } from 'lucide-react';
 import { createConfession } from '../services/api';
 
 export default function ConfessionForm({ onConfessionCreated }) {
   const [content, setContent] = useState('');
   const [author, setAuthor] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev > 1 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+
+    if (cooldown > 0) {
+      setErrorMessage(`Bạn đang thao tác quá nhanh. Vui lòng chờ ${cooldown} giây trước khi gửi tiếp.`);
+      return;
+    }
 
     // Client-side validation: reject empty or whitespace-only content
     const trimmedContent = content.trim();
@@ -37,6 +51,9 @@ export default function ConfessionForm({ onConfessionCreated }) {
       setAuthor('');
       setSuccessMessage('Lời thú tội của bạn đã được gửi thành công!');
 
+      // Set gentle cooldown to prevent double submit
+      setCooldown(5);
+
       // Notify parent component to update confession list
       if (onConfessionCreated) {
         onConfessionCreated(newConfession);
@@ -49,9 +66,13 @@ export default function ConfessionForm({ onConfessionCreated }) {
     } catch (err) {
       console.error('Lỗi khi gửi lời thú tội:', err);
       const serverMessage =
+        err.friendlyMessage ||
         err.response?.data?.message ||
         err.response?.data?.error ||
         'Không thể gửi lời thú tội. Vui lòng thử lại sau.';
+      if (err.response?.status === 429) {
+        setCooldown(15);
+      }
       setErrorMessage(serverMessage);
     } finally {
       setIsSubmitting(false);
@@ -122,7 +143,7 @@ export default function ConfessionForm({ onConfessionCreated }) {
             }}
             onKeyDown={handleKeyDown}
             placeholder="Bạn đang nghĩ gì? Hãy chia sẻ thật lòng tại đây... (Nhấn Ctrl+Enter để gửi nhanh)"
-            disabled={isSubmitting}
+            disabled={isSubmitting || cooldown > 0}
             className="w-full px-4 py-3 rounded-xl border border-slate-800 bg-slate-950/70 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-600 transition-all resize-none text-sm leading-relaxed disabled:bg-slate-950/40 disabled:cursor-not-allowed"
           />
           <div className="flex justify-between items-center mt-1 text-xs text-slate-500">
@@ -150,7 +171,7 @@ export default function ConfessionForm({ onConfessionCreated }) {
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="Ẩn danh (tuỳ chọn)"
-                disabled={isSubmitting}
+                disabled={isSubmitting || cooldown > 0}
                 maxLength={50}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950/70 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-600 transition-all text-sm disabled:bg-slate-950/40 disabled:cursor-not-allowed"
               />
@@ -160,13 +181,18 @@ export default function ConfessionForm({ onConfessionCreated }) {
           <div>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || cooldown > 0}
               className="w-full py-2.5 px-6 rounded-xl bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 hover:from-purple-600 hover:to-purple-700 active:scale-[0.98] text-purple-50 font-medium text-sm shadow-lg shadow-purple-950/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] border border-purple-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Đang gửi...</span>
+                </>
+              ) : cooldown > 0 ? (
+                <>
+                  <Clock className="w-4 h-4 animate-spin" />
+                  <span>Vui lòng chờ {cooldown}s...</span>
                 </>
               ) : (
                 <>
