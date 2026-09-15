@@ -11,6 +11,60 @@ const api = axios.create({
     'Accept': 'application/json',
   },
   timeout: 10000,
+  withCredentials: true,
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
+});
+
+/**
+ * Extract XSRF-TOKEN value directly from browser document.cookie
+ */
+export const getCsrfTokenFromCookie = () => {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
+let csrfPromise = null;
+
+/**
+ * Fetch a CSRF token from the backend /csrf endpoint if not present in cookies
+ */
+export const fetchCsrfToken = async () => {
+  const existing = getCsrfTokenFromCookie();
+  if (existing) return existing;
+  if (csrfPromise) return csrfPromise;
+
+  csrfPromise = api.get('/csrf')
+    .then((res) => getCsrfTokenFromCookie() || res.data?.token || null)
+    .catch((err) => {
+      console.warn('Không thể tải CSRF token từ máy chủ:', err);
+      return getCsrfTokenFromCookie();
+    })
+    .finally(() => {
+      csrfPromise = null;
+    });
+
+  return csrfPromise;
+};
+
+// Request interceptor to attach X-XSRF-TOKEN header to mutating requests
+api.interceptors.request.use(async (config) => {
+  const method = config.method ? config.method.toUpperCase() : 'GET';
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    let token = getCsrfTokenFromCookie();
+    if (!token) {
+      token = await fetchCsrfToken();
+    }
+    if (token) {
+      if (config.headers && typeof config.headers.set === 'function') {
+        config.headers.set('X-XSRF-TOKEN', token);
+      } else if (config.headers) {
+        config.headers['X-XSRF-TOKEN'] = token;
+      }
+    }
+  }
+  return config;
 });
 
 api.interceptors.response.use(

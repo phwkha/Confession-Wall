@@ -1,6 +1,7 @@
 package com.example.confessionwall.config;
 
 import com.example.confessionwall.ratelimit.RateLimitInterceptor;
+import com.example.confessionwall.security.CsrfInterceptor;
 import com.example.confessionwall.security.OriginValidationInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -15,14 +16,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private final RateLimitInterceptor rateLimitInterceptor;
     private final OriginValidationInterceptor originValidationInterceptor;
+    private final CsrfInterceptor csrfInterceptor;
     private final CorsProperties corsProperties;
 
     public WebMvcConfig(
             @Autowired(required = false) RateLimitInterceptor rateLimitInterceptor,
             @Autowired(required = false) OriginValidationInterceptor originValidationInterceptor,
+            @Autowired(required = false) CsrfInterceptor csrfInterceptor,
             @Autowired(required = false) CorsProperties corsProperties) {
         this.rateLimitInterceptor = rateLimitInterceptor;
         this.originValidationInterceptor = originValidationInterceptor;
+        this.csrfInterceptor = csrfInterceptor;
         this.corsProperties = corsProperties;
     }
 
@@ -47,10 +51,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     .order(1);
         }
 
+        if (csrfInterceptor != null) {
+            registry.addInterceptor(csrfInterceptor)
+                    .addPathPatterns("/api/**")
+                    .order(2);
+        }
+
         if (rateLimitInterceptor != null) {
             registry.addInterceptor(rateLimitInterceptor)
                     .addPathPatterns("/api/confessions", "/api/confessions/**")
-                    .order(2);
+                    .order(3);
         }
     }
 }
