@@ -1,6 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, User, Clock, MessageSquare, AlertTriangle, Loader2 } from 'lucide-react';
-import { getComments, createComment } from '../services/api';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  X,
+  Send,
+  User,
+  Clock,
+  MessageSquare,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
+import { getComments, createComment } from "../services/api";
 
 /**
  * Format timestamp into human readable relative or absolute Vietnamese format
@@ -8,16 +16,16 @@ import { getComments, createComment } from '../services/api';
  * @returns {string} Formatted string
  */
 function formatVietnameseTime(dateString) {
-  if (!dateString) return 'vừa xong';
+  if (!dateString) return "vừa xong";
 
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'vừa xong';
+  if (isNaN(date.getTime())) return "vừa xong";
 
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 30) {
-    return 'vừa xong';
+    return "vừa xong";
   } else if (diffInSeconds < 60) {
     return `${diffInSeconds} giây trước`;
   }
@@ -37,11 +45,11 @@ function formatVietnameseTime(dateString) {
     return `${diffInDays} ngày trước`;
   }
 
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
 
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
@@ -56,9 +64,9 @@ export default function CommentModal({
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [author, setAuthor] = useState('');
-  const [content, setContent] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [author, setAuthor] = useState("");
+  const [content, setContent] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const commentsEndRef = useRef(null);
   const textareaRef = useRef(null);
   const isInitialLoadRef = useRef(true);
@@ -73,18 +81,18 @@ export default function CommentModal({
     }, 100);
 
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
 
     return () => {
       clearTimeout(focusTimer);
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = originalOverflow;
     };
   }, [isOpen, onClose]);
@@ -95,7 +103,7 @@ export default function CommentModal({
 
     let isSubscribed = true;
     setIsLoading(true);
-    setErrorMessage('');
+    setErrorMessage("");
     isInitialLoadRef.current = true;
 
     getComments(confession.id)
@@ -107,7 +115,8 @@ export default function CommentModal({
       .catch((err) => {
         if (isSubscribed) {
           setErrorMessage(
-            err.response?.data?.message || 'Không thể tải danh sách bình luận. Vui lòng thử lại.'
+            err.response?.data?.message ||
+              "Không thể tải danh sách bình luận. Vui lòng thử lại.",
           );
         }
       })
@@ -126,8 +135,10 @@ export default function CommentModal({
   useEffect(() => {
     if (!realtimeComment || !isOpen || !confession?.id) return;
 
-    const commentData = realtimeComment.comment || (realtimeComment.id ? realtimeComment : null);
-    const targetConfessionId = realtimeComment.confessionId || commentData?.confessionId;
+    const commentData =
+      realtimeComment.comment || (realtimeComment.id ? realtimeComment : null);
+    const targetConfessionId =
+      realtimeComment.confessionId || commentData?.confessionId;
 
     if (commentData && targetConfessionId === confession.id) {
       setComments((prev) => {
@@ -147,7 +158,7 @@ export default function CommentModal({
       return;
     }
     if (comments.length > 0) {
-      commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [comments.length, isLoading]);
 
@@ -160,17 +171,17 @@ export default function CommentModal({
     const trimmedContent = content.trim();
 
     if (!trimmedContent) {
-      setErrorMessage('Vui lòng nhập nội dung bình luận.');
+      setErrorMessage("Vui lòng nhập nội dung bình luận.");
       return;
     }
 
     if (trimmedContent.length > 500) {
-      setErrorMessage('Nội dung bình luận không được vượt quá 500 ký tự.');
+      setErrorMessage("Nội dung bình luận không được vượt quá 500 ký tự.");
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMessage('');
+    setErrorMessage("");
 
     try {
       const newComment = await createComment(confession.id, {
@@ -185,16 +196,16 @@ export default function CommentModal({
       });
 
       // Reset form
-      setContent('');
-      setAuthor('');
+      setContent("");
+      setAuthor("");
       onCommentAdded?.(confession.id, newComment);
     } catch (err) {
-      console.error('Lỗi khi gửi bình luận:', err);
+      console.error("Lỗi khi gửi bình luận:", err);
       setErrorMessage(
         err.response?.data?.message ||
-        (err.response?.status === 429
-          ? 'Bạn đang thao tác quá nhanh, vui lòng thử lại sau.'
-          : 'Không thể gửi bình luận. Vui lòng thử lại.')
+          (err.response?.status === 429
+            ? "Bạn đang thao tác quá nhanh, vui lòng thử lại sau."
+            : "Không thể gửi bình luận. Vui lòng thử lại."),
       );
     } finally {
       setIsSubmitting(false);
@@ -202,8 +213,8 @@ export default function CommentModal({
   };
 
   const handleTextareaKeyDown = (e) => {
-    // Ctrl + Enter or Cmd + Enter to submit
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    // Enter to submit (without Shift), Shift + Enter to add newline
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent?.isComposing) {
       e.preventDefault();
       handleSubmit(e);
     }
@@ -215,13 +226,13 @@ export default function CommentModal({
     }
   };
 
-  const authorName = confession.author?.trim() || 'Ẩn danh';
+  const authorName = confession.author?.trim() || "Ẩn danh";
 
   return (
     <div
       onClick={handleBackdropClick}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') {
+        if (e.key === "Escape") {
           onClose();
         }
       }}
@@ -242,7 +253,10 @@ export default function CommentModal({
               <MessageSquare className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h3 id="modal-title" className="font-bold text-slate-100 text-base sm:text-lg truncate">
+              <h3
+                id="modal-title"
+                className="font-bold text-slate-100 text-base sm:text-lg truncate"
+              >
                 Bình luận thú tội #{confession.id}
               </h3>
               <p className="text-xs text-slate-400 flex items-center gap-1.5">
@@ -294,18 +308,22 @@ export default function CommentModal({
               </div>
             ) : comments.length === 0 ? (
               <div className="text-center py-8 px-4 rounded-xl bg-slate-950/30 border border-dashed border-slate-800 text-slate-400">
-                <p className="text-sm font-medium text-slate-300">Chưa có bình luận nào</p>
+                <p className="text-sm font-medium text-slate-300">
+                  Chưa có bình luận nào
+                </p>
                 <p className="text-xs text-slate-500 mt-1">
                   Hãy là người đầu tiên chia sẻ cảm nghĩ về lời thú tội này!
                 </p>
               </div>
             ) : (
               comments.map((comment) => {
-                const commentAuthor = comment.author?.trim() || 'Ẩn danh';
-                const isAnon = commentAuthor === 'Ẩn danh';
+                const commentAuthor = comment.author?.trim() || "Ẩn danh";
+                const isAnon = commentAuthor === "Ẩn danh";
                 return (
                   <div
-                    key={comment.id || `${comment.createdAt}-${comment.content}`}
+                    key={
+                      comment.id || `${comment.createdAt}-${comment.content}`
+                    }
                     className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-purple-800/40 transition-colors animate-confession-appear"
                   >
                     <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -313,8 +331,8 @@ export default function CommentModal({
                         <div
                           className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                             isAnon
-                              ? 'bg-slate-800 text-slate-400 border border-slate-700'
-                              : 'bg-purple-950 text-purple-300 border border-purple-700'
+                              ? "bg-slate-800 text-slate-400 border border-slate-700"
+                              : "bg-purple-950 text-purple-300 border border-purple-700"
                           }`}
                         >
                           <User className="w-3 h-3" />
@@ -339,7 +357,10 @@ export default function CommentModal({
         </div>
 
         {/* Modal Footer / New Comment Form */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 border-t border-slate-800 bg-slate-900/95 space-y-3">
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 sm:p-5 border-t border-slate-800 bg-slate-900/95 space-y-3"
+        >
           {errorMessage && (
             <div className="p-2.5 rounded-xl bg-amber-950/80 border border-amber-600/60 text-amber-200 text-xs flex items-center gap-2 animate-fadeIn">
               <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
@@ -349,7 +370,9 @@ export default function CommentModal({
 
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="w-full sm:w-1/3">
-              <label htmlFor="comment-author" className="sr-only">Tên người bình luận (tùy chọn)</label>
+              <label htmlFor="comment-author" className="sr-only">
+                Tên người bình luận (tùy chọn)
+              </label>
               <input
                 id="comment-author"
                 type="text"
@@ -361,38 +384,51 @@ export default function CommentModal({
               />
             </div>
             <div className="flex-1 text-right text-[11px] text-slate-500 self-center hidden sm:block">
-              {content.length}/500 ký tự &bull; <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 font-mono">Ctrl/Cmd + Enter</kbd> để gửi
+              {content.length}/500 ký tự &bull;{" "}
+              <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 font-mono">
+                Enter
+              </kbd>{" "}
+              để gửi &bull;{" "}
+              <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 font-mono">
+                Shift + Enter
+              </kbd>{" "}
+              xuống dòng
             </div>
           </div>
 
-          <div className="relative">
-            <label htmlFor="comment-content" className="sr-only">Nội dung bình luận</label>
-            <textarea
-              id="comment-content"
-              ref={textareaRef}
-              rows={2}
-              maxLength={500}
-              required
-              value={content}
-              onChange={(e) => {
-                setContent(e.target.value);
-                if (errorMessage) setErrorMessage('');
-              }}
-              onKeyDown={handleTextareaKeyDown}
-              placeholder="Chia sẻ suy nghĩ của bạn về lời thú tội này..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none pr-24"
-            />
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <label htmlFor="comment-content" className="sr-only">
+                Nội dung bình luận
+              </label>
+              <textarea
+                id="comment-content"
+                ref={textareaRef}
+                rows={2}
+                maxLength={500}
+                required
+                value={content}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  if (errorMessage) setErrorMessage("");
+                }}
+                onKeyDown={handleTextareaKeyDown}
+                placeholder="Chia sẻ suy nghĩ của bạn... (Enter để gửi)"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none"
+              />
+            </div>
             <button
               type="submit"
               disabled={isSubmitting || !content.trim()}
-              className="absolute right-2 bottom-3 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+              aria-label="Gửi bình luận"
+              className="flex-shrink-0 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95 self-end mb-0"
             >
               {isSubmitting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
               )}
-              <span>Gửi</span>
+              <span className="hidden sm:inline">Gửi</span>
             </button>
           </div>
         </form>
