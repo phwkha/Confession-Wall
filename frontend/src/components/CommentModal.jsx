@@ -396,30 +396,32 @@ export default function CommentModal({
             </div>
           </div>
 
-          <div className="flex gap-2 items-end">
-            <label htmlFor="comment-content" className="sr-only">
-              Nội dung bình luận
-            </label>
-            <textarea
-              id="comment-content"
-              ref={textareaRef}
-              rows={2}
-              maxLength={500}
-              required
-              value={content}
-              onChange={(e) => {
-                setContent(e.target.value);
-                if (errorMessage) setErrorMessage("");
-              }}
-              onKeyDown={handleTextareaKeyDown}
-              placeholder="Chia sẻ suy nghĩ của bạn... (Enter để gửi)"
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none"
-            />
+          <div className="flex gap-2 items-center">
+            <div className="flex-1 min-w-0">
+              <label htmlFor="comment-content" className="sr-only">
+                Nội dung bình luận
+              </label>
+              <textarea
+                id="comment-content"
+                ref={textareaRef}
+                rows={2}
+                maxLength={500}
+                required
+                value={content}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  if (errorMessage) setErrorMessage("");
+                }}
+                onKeyDown={handleTextareaKeyDown}
+                placeholder="Chia sẻ suy nghĩ của bạn... (Enter để gửi)"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none"
+              />
+            </div>
             <button
               type="submit"
               disabled={isSubmitting || !content.trim()}
               aria-label="Gửi bình luận"
-              className="flex-shrink-0 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+              className="flex-shrink-0 h-[52px] px-4 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
