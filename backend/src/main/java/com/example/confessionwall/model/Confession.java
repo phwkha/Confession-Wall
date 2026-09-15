@@ -23,7 +23,7 @@ public class Confession {
     @Column(nullable = false)
     private Integer likes = 0;
 
-    @Column(name = "comment_count", nullable = false)
+    @Column(name = "comment_count", nullable = false, columnDefinition = "integer default 0")
     private Integer commentCount = 0;
 
     @Column(name = "created_at", nullable = false, updatable = false)
